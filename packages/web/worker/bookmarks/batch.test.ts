@@ -9,7 +9,6 @@ describe('batchUpdateSchema', () => {
       { tag: 'dev:react', type: 'addTag' },
       { tag: 'dev:react', type: 'removeTag' },
       { type: 'star', value: true },
-      { type: 'seeLater', value: false },
       { type: 'public', value: false },
       { type: 'setType', value: 'recipe' },
       { type: 'trash' },

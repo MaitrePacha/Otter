@@ -1,10 +1,8 @@
 import {
   ArrowCounterClockwiseIcon,
   ChecksIcon,
-  DownloadIcon,
   EyeIcon,
   EyeSlashIcon,
-  HourglassMediumIcon,
   MinusCircleIcon,
   PencilSimpleIcon,
   PlusCircleIcon,
@@ -17,11 +15,7 @@ import { toast } from 'sonner'
 import type { BatchAction } from 'worker/bookmarks/batch'
 import { Button } from '@/components/Button'
 import type { Bookmark, BookmarkType } from '@/types/db'
-import {
-  batchUpdateBookmarks,
-  updateBookmark,
-} from '@/utils/fetching/bookmarks'
-import { scrapeBookmarkUpdate } from '@/utils/fetching/scrape'
+import { batchUpdateBookmarks } from '@/utils/fetching/bookmarks'
 import { getTagsOptions } from '@/utils/fetching/tags'
 import { getErrorMessage } from '@/utils/get-error-message'
 import { Flex } from './Flex'
@@ -48,8 +42,6 @@ interface BulkActionBarProps {
   totalCount: number
   /** In the trash the actions are restore and permanent delete */
   isTrash?: boolean
-  /** On the See later page, a button takes the selection off the list */
-  isSeeLater?: boolean
   onSelectAll: () => void
   onClear: () => void
 }
@@ -58,7 +50,6 @@ export const BulkActionBar = ({
   selectedBookmarks,
   totalCount,
   isTrash = false,
-  isSeeLater = false,
   onSelectAll,
   onClear,
 }: BulkActionBarProps) => {
@@ -73,57 +64,16 @@ export const BulkActionBar = ({
     onError: (error) => {
       toast.error(getErrorMessage(error))
     },
-    onSuccess: async ({ data }, action) => {
+    onSuccess: async ({ data }) => {
       toast.success(
         `Updated ${data.updated} bookmark${data.updated === 1 ? '' : 's'}`,
       )
-      if (['trash', 'restore', 'delete'].includes(action.type)) {
-        onClear()
-      }
+      // Every action ends with an empty selection, ready for the next one
+      onClear()
       await queryClient.invalidateQueries()
     },
   })
-  // Scraping runs one bookmark at a time from the browser: each page is a
-  // separate fetch, so the Worker never scrapes many pages in one request
-  const { isPending: isScraping, mutate: scrape } = useMutation({
-    mutationFn: async () => {
-      const targets = selectedBookmarks.filter((bookmark) => bookmark.url)
-      const toastId = toast.loading(`Scraping 0/${targets.length}…`)
-      let updated = 0
-      let failed = 0
-
-      for (const [index, bookmark] of targets.entries()) {
-        toast.loading(`Scraping ${index + 1}/${targets.length}…`, {
-          id: toastId,
-        })
-        try {
-          const update = await scrapeBookmarkUpdate(bookmark.url as string)
-
-          if (Object.keys(update).length) {
-            await updateBookmark(bookmark.id, update)
-            updated++
-          }
-        } catch {
-          failed++
-        }
-      }
-
-      return { failed, toastId, updated }
-    },
-    onSettled: async () => {
-      await queryClient.invalidateQueries()
-    },
-    onSuccess: ({ failed, toastId, updated }) => {
-      const message = `Scraped ${updated} bookmark${updated === 1 ? '' : 's'}`
-
-      if (failed) {
-        toast.warning(`${message}, ${failed} failed`, { id: toastId })
-      } else {
-        toast.success(message, { id: toastId })
-      }
-    },
-  })
-  const isDisabled = isPending || isScraping || selectedIds.length === 0
+  const isDisabled = isPending || selectedIds.length === 0
   const trimmedTag = tag.trim()
   const isAllSelected = totalCount > 0 && selectedIds.length === totalCount
 
@@ -225,28 +175,6 @@ export const BulkActionBar = ({
             ) : (
               <EyeIcon size={16} weight="duotone" />
             )}
-          </Button>
-          {isSeeLater ? (
-            <Button
-              size="xs"
-              variant="ghost"
-              disabled={isDisabled}
-              onClick={() => mutate({ type: 'seeLater', value: false })}
-              aria-label="Remove from See later"
-              title="Remove from See later"
-            >
-              <HourglassMediumIcon size={16} weight="fill" />
-            </Button>
-          ) : null}
-          <Button
-            size="xs"
-            variant="ghost"
-            disabled={isDisabled}
-            onClick={() => scrape()}
-            aria-label="Scrape"
-            title="Scrape: update the description and image from each page"
-          >
-            <DownloadIcon size={16} weight="duotone" />
           </Button>
           <Button
             size="xs"

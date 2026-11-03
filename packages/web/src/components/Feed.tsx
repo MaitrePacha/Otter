@@ -77,7 +77,7 @@ export const Feed = memo(
     feedType,
     subNav,
     showFeedOptions = true,
-    from,
+    from: _from,
     hasNextPage = false,
     isFetchingNextPage = false,
     fetchNextPage,
@@ -243,7 +243,6 @@ export const Feed = memo(
                   selectedBookmarks={selectedBookmarks}
                   totalCount={bookmarkIds.length}
                   isTrash={allowDeletion}
-                  isSeeLater={from === '/see-later'}
                   onSelectAll={() => setSelection(new Set(bookmarkIds))}
                   onClear={() => setSelection(new Set())}
                 />
