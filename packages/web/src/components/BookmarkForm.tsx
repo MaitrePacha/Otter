@@ -83,6 +83,20 @@ interface BookmarkFormProps extends ComponentProps<'div'> {
   tags?: MetaTag[]
 }
 
+// A bookmark needs a web address: the lists read its domain from it
+const validateUrl = ({ value }: { value?: string | null }) => {
+  const url = value?.trim()
+
+  if (!url) {
+    return "Enter the bookmark's web address"
+  }
+  if (!URL.canParse(url) || !/^https?:$/.test(new URL(url).protocol)) {
+    return 'Enter a full web address, starting with http:// or https://'
+  }
+
+  return undefined
+}
+
 const normalizeUrl = (value: string) => {
   try {
     return new URL(value).toString()
@@ -377,28 +391,42 @@ export const BookmarkForm = ({
                   </TooltipProvider>
                 }
               >
-                <form.Field name="url">
+                <form.Field
+                  name="url"
+                  validators={{ onBlur: validateUrl, onSubmit: validateUrl }}
+                >
                   {(field) => (
-                    <Input
-                      id="url"
-                      name={field.name}
-                      placeholder={DEFAULT_BOOKMARK_FORM_URL_PLACEHOLDER}
-                      value={field.state.value ?? ''}
-                      onBlur={(e) => {
-                        field.handleBlur()
-                        const url = e.target.value.trim()
-                        if (
-                          url &&
-                          isNew &&
-                          !scrapeMutation.isPending &&
-                          normalizeUrl(url) !== lastScrapedUrl.current
-                        ) {
-                          handleScrape(url)
-                        }
-                      }}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      autoFocus
-                    />
+                    <>
+                      <Input
+                        id="url"
+                        name={field.name}
+                        placeholder={DEFAULT_BOOKMARK_FORM_URL_PLACEHOLDER}
+                        value={field.state.value ?? ''}
+                        onBlur={(e) => {
+                          field.handleBlur()
+                          const url = e.target.value.trim()
+                          if (
+                            url &&
+                            isNew &&
+                            !scrapeMutation.isPending &&
+                            normalizeUrl(url) !== lastScrapedUrl.current
+                          ) {
+                            handleScrape(url)
+                          }
+                        }}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        autoFocus
+                        aria-invalid={field.state.meta.errors.length > 0}
+                      />
+                      {field.state.meta.errors.length ? (
+                        <p
+                          role="alert"
+                          className="mt-3xs text-step--2 text-[hsl(var(--destructive))]"
+                        >
+                          {field.state.meta.errors[0]}
+                        </p>
+                      ) : null}
+                    </>
                   )}
                 </form.Field>
               </FormGroup>
