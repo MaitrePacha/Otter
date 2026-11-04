@@ -171,6 +171,10 @@
       border: 0;
       color: var(--accent11);
       background-color: var(--accent6);
+
+      &:hover {
+        color: var(--accent12);
+      }
     }
   }
 }
