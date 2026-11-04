@@ -522,6 +522,9 @@ export const batchJournalEntriesSchema = z.object({
   action: z.discriminatedUnion('type', [
     z.object({ journal: z.number().int().positive(), type: z.literal('move') }),
     z.object({ type: z.literal('delete') }),
+    z.object({ type: z.literal('restore') }),
+    // Permanent, and only for entries already in the trash
+    z.object({ type: z.literal('purge') }),
   ]),
   ids: z.array(z.number().int().positive()).min(1).max(MAX_ENTRY_BATCH_SIZE),
 })
@@ -532,8 +535,9 @@ export type JournalEntryBatchAction = z.infer<
 
 /**
  * POST /api/journal-entries/batch
- * Moves many of the user's entries to another of their journals, or
- * soft-deletes them, in a single query.
+ * Moves many of the user's entries to another of their journals,
+ * soft-deletes them, restores them from the trash or deletes them for good
+ * from it, in a single query.
  */
 export const batchUpdateJournalEntries = async (context: HonoContext) => {
   try {
@@ -565,20 +569,25 @@ export const batchUpdateJournalEntries = async (context: HonoContext) => {
       return notFoundResponse('Journal not found or access denied')
     }
 
-    const updated = await auth.requestContext.db
-      .update(journalEntries)
-      .set(
-        action.type === 'move'
-          ? { journal: action.journal }
-          : { status: 'deleted' },
-      )
-      .where(
-        and(
-          eq(journalEntries.owner, auth.userId),
-          inArray(journalEntries.id, ids),
-        ),
-      )
-      .returning({ id: journalEntries.id })
+    const where = and(
+      eq(journalEntries.owner, auth.userId),
+      inArray(journalEntries.id, ids),
+    )
+    const updated =
+      action.type === 'purge'
+        ? await auth.requestContext.db
+            .delete(journalEntries)
+            .where(and(where, eq(journalEntries.status, 'deleted')))
+            .returning({ id: journalEntries.id })
+        : await auth.requestContext.db
+            .update(journalEntries)
+            .set(
+              action.type === 'move'
+                ? { journal: action.journal }
+                : { status: action.type === 'restore' ? 'active' : 'deleted' },
+            )
+            .where(where)
+            .returning({ id: journalEntries.id })
 
     return new Response(
       JSON.stringify({ data: { updated: updated.length }, error: null }),
