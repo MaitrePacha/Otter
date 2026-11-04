@@ -59,9 +59,6 @@ export const getJournalEntries = async (filters: JournalEntryFilters = {}) => {
   if (filters.journal) {
     searchParams.set('journal', String(filters.journal))
   }
-  if (filters.status) {
-    searchParams.set('status', filters.status)
-  }
 
   const queryString = searchParams.toString()
   const response = await fetch(

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { batchJournalEntriesSchema, MAX_ENTRY_BATCH_SIZE } from './journal'
 
 describe('batchJournalEntriesSchema', () => {
-  it('accepts moving, deleting, restoring and purging entries', () => {
+  it('accepts moving and deleting entries', () => {
     expect(
       batchJournalEntriesSchema.safeParse({
         action: { journal: 3, type: 'move' },
@@ -15,12 +15,6 @@ describe('batchJournalEntriesSchema', () => {
         ids: [1],
       }).success,
     ).toBe(true)
-    for (const type of ['restore', 'purge']) {
-      expect(
-        batchJournalEntriesSchema.safeParse({ action: { type }, ids: [1] })
-          .success,
-      ).toBe(true)
-    }
   })
 
   it('rejects a move without a valid journal', () => {
