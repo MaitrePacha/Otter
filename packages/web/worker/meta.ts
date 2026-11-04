@@ -1,4 +1,4 @@
-import { and, arrayOverlaps, count, desc, eq, gte, lt, sql } from 'drizzle-orm'
+import { and, count, desc, eq, gte, lt, or, sql } from 'drizzle-orm'
 import type { Context } from 'hono'
 import { API_HEADERS, DEFAULT_API_RESPONSE_LIMIT } from '@/constants'
 import { apiParameters } from '@/utils/fetching/apiParameters'
@@ -380,7 +380,9 @@ export const getCollectionBookmarks = async (context: HonoContext) => {
       eq(bookmarks.user, auth.userId),
       eq(bookmarks.status, 'active'),
       collectionMatchCondition(name),
-      tags.length ? arrayOverlaps(bookmarks.tags, tags) : undefined,
+      // A filter tag also matches its sub-tags (tag:sub-tag), as a folder
+      // holds its sub-folders
+      tags.length ? or(...tags.map(collectionMatchCondition)) : undefined,
       star === undefined ? undefined : eq(bookmarks.star, star),
       publicItems === undefined ? undefined : eq(bookmarks.public, publicItems),
       dateWindow
