@@ -13,6 +13,8 @@ export interface BookmarkFeedItemProps extends Bookmark {
   allowDeletion?: boolean
   preventMarkdownClamping?: boolean
   collections?: Collection[]
+  /** Shows the hourglass that takes a bookmark off See later */
+  showSeeLater?: boolean
   /** Shows a checkbox for bulk editing when defined */
   isSelected?: boolean
   onSelectedChange?: (id: string, isSelected: boolean) => void

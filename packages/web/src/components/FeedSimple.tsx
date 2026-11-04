@@ -12,47 +12,55 @@ interface FeedSimpleProps {
   title?: ReactNode
   icon?: ReactNode
   items: FeedItemModel[]
+  /** For the See later section: lets each bookmark be taken off the list */
+  showSeeLater?: boolean
 }
 
-export const FeedSimple = memo(({ title, icon, items }: FeedSimpleProps) => {
-  if (!items?.length) {
-    return null
-  }
+export const FeedSimple = memo(
+  ({ title, icon, items, showSeeLater }: FeedSimpleProps) => {
+    if (!items?.length) {
+      return null
+    }
 
-  return (
-    <div className="feed-simple">
-      <h3
-        className={cn(
-          headingVariants({ variant: 'feedTitle' }),
-          'flex items-center gap-2xs',
-        )}
-      >
-        {icon}
-        {title}
-      </h3>
+    return (
+      <div className="feed-simple">
+        <h3
+          className={cn(
+            headingVariants({ variant: 'feedTitle' }),
+            'flex items-center gap-2xs',
+          )}
+        >
+          {icon}
+          {title}
+        </h3>
 
-      <div className="feed-simple-grid">
-        {items.map((item) => {
-          if (!item) {
-            return null
-          }
-          if (isTweet(item)) {
-            return <TweetFeedItem {...item} key={item.id} />
-          } else if (isToot(item)) {
-            return <TootFeedItem {...item} key={item.id} />
-          }
-          return (
-            <ErrorBoundary
-              fallback={<div>Something went wrong</div>}
-              key={item.id}
-            >
-              <BookmarkFeedItem {...item} allowDeletion={false} />
-            </ErrorBoundary>
-          )
-        })}
+        <div className="feed-simple-grid">
+          {items.map((item) => {
+            if (!item) {
+              return null
+            }
+            if (isTweet(item)) {
+              return <TweetFeedItem {...item} key={item.id} />
+            } else if (isToot(item)) {
+              return <TootFeedItem {...item} key={item.id} />
+            }
+            return (
+              <ErrorBoundary
+                fallback={<div>Something went wrong</div>}
+                key={item.id}
+              >
+                <BookmarkFeedItem
+                  {...item}
+                  allowDeletion={false}
+                  showSeeLater={showSeeLater}
+                />
+              </ErrorBoundary>
+            )
+          })}
+        </div>
       </div>
-    </div>
-  )
-})
+    )
+  },
+)
 
 FeedSimple.displayName = 'FeedSimple'

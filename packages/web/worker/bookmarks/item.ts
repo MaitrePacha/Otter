@@ -8,6 +8,7 @@ import { bookmarks } from '../../db/schema'
 import { requireRequestContext } from '../context'
 import type { WorkerEnv } from '../env'
 import { bookmarkToRow } from './mapper'
+import { seeLaterOnCreate, seeLaterOnUpdate } from './seeLater'
 import { scheduleBookmarkSideEffects } from './sideEffects'
 import { urlKey } from './urlKey'
 
@@ -118,10 +119,12 @@ export const createBookmark = async (context: HonoContext) => {
     }
 
     const body = await readJson(context)
+    const set = toBookmarkSet(body)
     const [bookmark] = await auth.requestContext.db
       .insert(bookmarks)
       .values({
-        ...toBookmarkSet(body),
+        ...set,
+        seeLater: seeLaterOnCreate(set.seeLater, set.tags),
         user: auth.userId,
       })
       .returning()
@@ -173,6 +176,7 @@ export const updateBookmarkById = async (context: HonoContext) => {
       .update(bookmarks)
       .set({
         ...toBookmarkSet(body),
+        ...seeLaterOnUpdate(toBookmarkSet(body)),
         modifiedAt: new Date(),
       })
       .where(and(eq(bookmarks.id, id), eq(bookmarks.user, auth.userId)))
@@ -257,7 +261,7 @@ export const deleteBookmarkById = async (context: HonoContext) => {
           .returning()
       : await auth.requestContext.db
           .update(bookmarks)
-          .set({ modifiedAt: new Date(), status: 'inactive' })
+          .set({ modifiedAt: new Date(), seeLater: false, status: 'inactive' })
           .where(and(eq(bookmarks.id, id), eq(bookmarks.user, auth.userId)))
           .returning()
 

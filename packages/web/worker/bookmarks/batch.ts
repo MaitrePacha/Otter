@@ -44,6 +44,8 @@ export const getBatchUpdate = (
   switch (action.type) {
     case 'addTag':
       return {
+        // A tagged bookmark is sorted: it leaves See later
+        seeLater: false,
         tags: sql`CASE WHEN ${action.tag}::text = ANY(coalesce(${bookmarks.tags}, '{}')) THEN ${bookmarks.tags} ELSE array_append(coalesce(${bookmarks.tags}, '{}'), ${action.tag}::text) END`,
       }
     case 'removeTag':
@@ -57,7 +59,7 @@ export const getBatchUpdate = (
     case 'setType':
       return { type: action.value }
     case 'trash':
-      return { status: 'inactive' }
+      return { seeLater: false, status: 'inactive' }
     case 'restore':
       return { status: 'active' }
     case 'clearDescription':
