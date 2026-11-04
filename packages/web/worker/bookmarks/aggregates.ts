@@ -115,7 +115,7 @@ export const getCollections = async (
 }
 
 // A tag belongs to collection `name` when it equals `name` or starts with
-// `<name>:`. `left(...)` comparison avoids LIKE-escaping issues for tags
+// `<name>:`. The same holds for a tag and its sub-tags. `left(...)` comparison avoids LIKE-escaping issues for tags
 // containing `%` or `_`.
 export const collectionMatchCondition = (name: string) => sql`EXISTS (
   SELECT 1 FROM unnest(${bookmarks.tags}) AS t(tag)

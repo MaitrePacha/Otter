@@ -32,6 +32,8 @@ import { TweetFeedItem } from './TweetFeedItem'
 
 interface FeedProps {
   title: ReactNode
+  /** Rendered under the title, in place of subNav */
+  filters?: ReactNode
   subNav?: {
     text: string
     href: string
@@ -76,6 +78,7 @@ export const Feed = memo(
     allowGroupByDate = false,
     feedType,
     subNav,
+    filters,
     showFeedOptions = true,
     from,
     hasNextPage = false,
@@ -250,6 +253,7 @@ export const Feed = memo(
               </PageToolbar>
             ) : null}
           </Flex>
+          {filters}
           {subNav ? (
             <Flex gapX="3xs" gapY="3xs" wrap="wrap">
               {subNav.map(({ href, text, isActive, icon, search }) => {
