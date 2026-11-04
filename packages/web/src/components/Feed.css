@@ -31,6 +31,9 @@
 .feed-item-cols {
   display: flex;
   gap: var(--space-xs);
+  /* Whole pixels, so the checkbox Select adds above the content on narrow
+     screens changes each card's height by a whole number of pixels */
+  gap: round(var(--space-xs), 1px);
   flex-direction: column;
 
   @media (min-width: 500px) {
@@ -86,6 +89,7 @@
   width: 1.25rem;
   height: 1.25rem;
   margin-top: var(--space-3xs);
+  margin-top: round(var(--space-3xs), 1px);
   border: 2px solid var(--theme7);
   border-radius: 50%;
   background-color: var(--background);
