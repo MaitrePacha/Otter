@@ -167,30 +167,35 @@ export const Feed = memo(
               <PageToolbar>
                 {showFeedOptions ? (
                   <>
-                    <Button
-                      onClick={() => handleToggleState('star')}
-                      size="xs"
-                      variant="ghost"
-                      aria-pressed={starQuery}
-                    >
-                      <StarIcon
-                        size={16}
-                        weight={starQuery ? 'fill' : 'duotone'}
-                      />{' '}
-                      Stars
-                    </Button>
-                    <Button
-                      onClick={() => handleToggleState('public')}
-                      size="xs"
-                      variant="ghost"
-                      aria-pressed={publicQuery}
-                    >
-                      <EyeIcon
-                        size={16}
-                        weight={publicQuery ? 'fill' : 'duotone'}
-                      />{' '}
-                      Public
-                    </Button>
+                    {/* Trashed bookmarks are not filtered by star or public */}
+                    {allowDeletion ? null : (
+                      <>
+                        <Button
+                          onClick={() => handleToggleState('star')}
+                          size="xs"
+                          variant="ghost"
+                          aria-pressed={starQuery}
+                        >
+                          <StarIcon
+                            size={16}
+                            weight={starQuery ? 'fill' : 'duotone'}
+                          />{' '}
+                          Stars
+                        </Button>
+                        <Button
+                          onClick={() => handleToggleState('public')}
+                          size="xs"
+                          variant="ghost"
+                          aria-pressed={publicQuery}
+                        >
+                          <EyeIcon
+                            size={16}
+                            weight={publicQuery ? 'fill' : 'duotone'}
+                          />{' '}
+                          Public
+                        </Button>
+                      </>
+                    )}
                     <Button
                       onClick={() => setWindowQuery((prev) => prev + 1)}
                       size="xs"

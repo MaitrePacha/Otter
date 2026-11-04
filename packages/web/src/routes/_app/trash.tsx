@@ -1,19 +1,35 @@
-import { NotebookIcon, TrashIcon } from '@phosphor-icons/react'
+import {
+  ArrowCounterClockwiseIcon,
+  BookmarkSimpleIcon,
+  CalendarBlankIcon,
+  CheckSquareIcon,
+  ChecksIcon,
+  ClockCounterClockwiseIcon,
+  TrashIcon,
+  XIcon,
+} from '@phosphor-icons/react'
 import {
   useSuspenseInfiniteQuery,
   useSuspenseQuery,
 } from '@tanstack/react-query'
 import { createFileRoute, useSearch } from '@tanstack/react-router'
+import { useState } from 'react'
+import { Button } from '@/components/Button'
 import { Feed } from '@/components/Feed'
 import { headingVariants } from '@/components/Heading'
 import { JournalEntryItem } from '@/components/JournalEntryItem'
 import { Link } from '@/components/Link'
+import { PageToolbar } from '@/components/PageToolbar'
 import { CONTENT, createTitle } from '@/constants'
+import { useFeedOptions } from '@/hooks/useFeedOptions'
 import type { Bookmark } from '@/types/db'
 import { cn } from '@/utils/classnames'
 import { apiParameters } from '@/utils/fetching/apiParameters'
 import { getBookmarksInfiniteOptions } from '@/utils/fetching/bookmarks'
-import { getJournalEntriesOptions } from '@/utils/fetching/journal'
+import {
+  getJournalEntriesOptions,
+  useBatchUpdateJournalEntries,
+} from '@/utils/fetching/journal'
 
 export const Route = createFileRoute('/_app/trash')({
   component: FeedPage,
@@ -39,14 +55,14 @@ export const Route = createFileRoute('/_app/trash')({
 const trashViews = (view: 'journal' | undefined) => [
   {
     href: '/trash',
-    icon: <TrashIcon weight="duotone" size={18} />,
+    icon: <BookmarkSimpleIcon weight="duotone" size={18} />,
     isActive: view !== 'journal',
     search: { view: undefined },
     text: 'Bookmarks',
   },
   {
     href: '/trash',
-    icon: <NotebookIcon weight="duotone" size={18} />,
+    icon: <CalendarBlankIcon weight="duotone" size={18} />,
     isActive: view === 'journal',
     search: { view: 'journal' },
     text: 'Journal entries',
@@ -99,7 +115,52 @@ function JournalTrash() {
   const { data } = useSuspenseQuery(
     getJournalEntriesOptions({ status: 'deleted' }),
   )
-  const entries = data?.data ?? []
+  const { windowQuery, setWindowQuery } = useFeedOptions()
+  // Same 7-day windows as the bookmarks, on the date each entry was created
+  const entries = (data?.data ?? []).filter((entry) => {
+    if (!windowQuery || !entry.created_at) {
+      return true
+    }
+    const age = (Date.now() - new Date(entry.created_at).getTime()) / 86_400_000
+    return age < windowQuery * 7 && age >= (windowQuery - 1) * 7
+  })
+  const batchMutation = useBatchUpdateJournalEntries()
+  const [isSelecting, setIsSelecting] = useState(false)
+  const [selection, setSelection] = useState<Set<number>>(() => new Set())
+  // Only act on selected entries that are still listed
+  const selectedIds = entries
+    .filter((entry) => selection.has(entry.id))
+    .map((entry) => entry.id)
+  const isAllSelected =
+    entries.length > 0 && selectedIds.length === entries.length
+  const isBatchDisabled = batchMutation.isPending || selectedIds.length === 0
+
+  const handleSelectedChange = (id: number, isSelected: boolean) => {
+    setSelection((prev) => {
+      const next = new Set(prev)
+      if (isSelected) {
+        next.add(id)
+      } else {
+        next.delete(id)
+      }
+      return next
+    })
+  }
+
+  const handleBatch = (type: 'restore' | 'purge') => {
+    if (
+      type === 'purge' &&
+      !confirm(
+        `Permanently delete ${selectedIds.length} journal ${selectedIds.length === 1 ? 'entry' : 'entries'}? This cannot be undone.`,
+      )
+    ) {
+      return
+    }
+    batchMutation.mutate(
+      { action: { type }, ids: selectedIds },
+      { onSuccess: () => setSelection(new Set()) },
+    )
+  }
 
   return (
     <div className="feed">
@@ -112,6 +173,93 @@ function JournalTrash() {
         <TrashIcon weight="duotone" size={24} />
         {CONTENT.trashTitle}
       </h3>
+      <PageToolbar>
+        <Button
+          onClick={() => setWindowQuery((prev) => prev + 1)}
+          size="xs"
+          variant="ghost"
+          aria-pressed={windowQuery > 0}
+          title="Click again to go back another 7 days"
+        >
+          <ClockCounterClockwiseIcon
+            size={16}
+            weight={windowQuery > 0 ? 'fill' : 'duotone'}
+          />{' '}
+          {windowQuery > 1
+            ? `${(windowQuery - 1) * 7 + 1}–${windowQuery * 7} days ago`
+            : 'Last 7 days'}
+        </Button>
+        {windowQuery > 0 ? (
+          <Button
+            onClick={() => setWindowQuery(0)}
+            size="xs"
+            variant="ghost"
+            aria-label="Clear date filter"
+          >
+            <XIcon size={16} />
+          </Button>
+        ) : null}
+        <Button
+          size="xs"
+          variant="ghost"
+          aria-pressed={isSelecting}
+          onClick={() => {
+            setIsSelecting((prev) => !prev)
+            setSelection(new Set())
+          }}
+        >
+          <CheckSquareIcon
+            size={16}
+            weight={isSelecting ? 'fill' : 'duotone'}
+          />{' '}
+          Select
+        </Button>
+      </PageToolbar>
+      {isSelecting ? (
+        <PageToolbar>
+          <span className="px-2xs text-step--2 text-theme11">
+            {selectedIds.length} selected
+          </span>
+          <Button
+            size="xs"
+            variant="ghost"
+            onClick={() =>
+              setSelection(
+                isAllSelected
+                  ? new Set()
+                  : new Set(entries.map((entry) => entry.id)),
+              )
+            }
+            aria-pressed={isAllSelected}
+            aria-label={isAllSelected ? 'Deselect all' : 'Select all'}
+            title={
+              isAllSelected ? 'Deselect all' : `Select all (${entries.length})`
+            }
+          >
+            <ChecksIcon size={16} weight={isAllSelected ? 'bold' : 'regular'} />
+          </Button>
+          <Button
+            size="xs"
+            variant="ghost"
+            disabled={isBatchDisabled}
+            onClick={() => handleBatch('restore')}
+            aria-label="Un-delete"
+            title="Un-delete"
+          >
+            <ArrowCounterClockwiseIcon size={16} weight="duotone" />
+          </Button>
+          <Button
+            size="xs"
+            variant="ghost"
+            disabled={isBatchDisabled}
+            onClick={() => handleBatch('purge')}
+            aria-label="Permanently delete"
+            title="Permanently delete"
+          >
+            <TrashIcon size={16} weight="duotone" />
+          </Button>
+        </PageToolbar>
+      ) : null}
       <div className="mt-xs flex flex-wrap gap-3xs">
         {trashViews('journal').map(({ href, icon, isActive, search, text }) => (
           <Link
@@ -133,7 +281,17 @@ function JournalTrash() {
       <div className="mt-m max-w-prose">
         {entries.length ? (
           entries.map((entry) => (
-            <JournalEntryItem key={entry.id} entry={entry} inTrash />
+            <JournalEntryItem
+              key={entry.id}
+              entry={entry}
+              inTrash
+              {...(isSelecting
+                ? {
+                    isSelected: selection.has(entry.id),
+                    onSelectedChange: handleSelectedChange,
+                  }
+                : {})}
+            />
           ))
         ) : (
           <p>{CONTENT.noItems}</p>
