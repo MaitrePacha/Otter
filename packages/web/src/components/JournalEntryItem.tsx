@@ -1,4 +1,5 @@
 import {
+  ArrowCounterClockwiseIcon,
   CalendarBlankIcon,
   PencilSimpleIcon,
   TrashIcon,
@@ -6,7 +7,10 @@ import {
 import { Button } from '@/components/Button'
 import { Markdown } from '@/components/Markdown'
 import type { JournalEntry } from '@/types/db'
-import { useDeleteJournalEntry } from '@/utils/fetching/journal'
+import {
+  useBatchUpdateJournalEntries,
+  useDeleteJournalEntry,
+} from '@/utils/fetching/journal'
 import { Flex } from './Flex'
 
 const formatEntryDate = (date: string) => {
@@ -20,7 +24,11 @@ const formatEntryDate = (date: string) => {
 
 interface JournalEntryItemProps {
   entry: JournalEntry
-  onEdit: (entry: JournalEntry) => void
+  /** Required unless inTrash */
+  onEdit?: (entry: JournalEntry) => void
+  /** In the trash: Un-delete and Permanently delete instead of Edit and
+   * Delete */
+  inTrash?: boolean
   onSelectJournal?: (journal: number) => void
   /** Shows a checkbox for bulk editing when defined */
   isSelected?: boolean
@@ -33,8 +41,10 @@ export const JournalEntryItem = ({
   onSelectJournal,
   isSelected,
   onSelectedChange,
+  inTrash = false,
 }: JournalEntryItemProps) => {
   const deleteJournalEntry = useDeleteJournalEntry()
+  const batchMutation = useBatchUpdateJournalEntries()
 
   const handleDelete = () => {
     if (confirm('Are you sure you want to delete this journal entry?')) {
@@ -77,19 +87,67 @@ export const JournalEntryItem = ({
             {entry.journals.name}
           </Button>
         ) : null}
-        <Button
-          variant="ghost"
-          size="xs"
-          type="button"
-          onClick={() => onEdit(entry)}
-        >
-          <PencilSimpleIcon size={16} weight="duotone" />
-          Edit
-        </Button>
-        <Button variant="ghost" size="xs" type="button" onClick={handleDelete}>
-          <TrashIcon size={16} weight="duotone" />
-          Delete
-        </Button>
+        {inTrash ? (
+          <>
+            <Button
+              variant="ghost"
+              size="xs"
+              type="button"
+              disabled={batchMutation.isPending}
+              onClick={() =>
+                batchMutation.mutate({
+                  action: { type: 'restore' },
+                  ids: [entry.id],
+                })
+              }
+            >
+              <ArrowCounterClockwiseIcon size={16} weight="duotone" />
+              Un-delete
+            </Button>
+            <Button
+              variant="ghost"
+              size="xs"
+              type="button"
+              disabled={batchMutation.isPending}
+              onClick={() => {
+                if (
+                  confirm(
+                    'Permanently delete this journal entry? This cannot be undone.',
+                  )
+                ) {
+                  batchMutation.mutate({
+                    action: { type: 'purge' },
+                    ids: [entry.id],
+                  })
+                }
+              }}
+            >
+              <TrashIcon size={16} weight="duotone" />
+              Permanently delete
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              variant="ghost"
+              size="xs"
+              type="button"
+              onClick={() => onEdit?.(entry)}
+            >
+              <PencilSimpleIcon size={16} weight="duotone" />
+              Edit
+            </Button>
+            <Button
+              variant="ghost"
+              size="xs"
+              type="button"
+              onClick={handleDelete}
+            >
+              <TrashIcon size={16} weight="duotone" />
+              Delete
+            </Button>
+          </>
+        )}
       </Flex>
     </article>
   )
