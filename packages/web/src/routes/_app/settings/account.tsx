@@ -3,6 +3,7 @@ import { CodeBlock } from '@/components/CodeBlock'
 import { UpdateInfoForm } from '@/components/UpdateInfoForm'
 import { useUser } from '@/components/UserProvider'
 import { SIDEBAR_SECTIONS, type SidebarSection } from '@/types/db'
+import { cn } from '@/utils/classnames'
 import { getSession } from '@/utils/fetching/user'
 
 export const Route = createFileRoute('/_app/settings/account')({
@@ -39,27 +40,49 @@ const SidebarSectionsSetting = () => {
   const { profile, handleUpdateUISettings } = useUser()
   const hidden = profile?.settings_hidden_sections ?? []
 
+  // Two columns of switches, also on phones to keep the list short
   return (
-    <fieldset className="flex flex-wrap gap-x-m gap-y-2xs">
+    <fieldset>
       <legend className="mb-2xs">Show in the sidebar</legend>
-      {SIDEBAR_SECTIONS.map((section) => (
-        <label key={section} className="flex items-center gap-2xs">
-          <input
-            type="checkbox"
-            className="size-5 shrink-0 cursor-pointer accent-accent9"
-            checked={!hidden.includes(section)}
-            onChange={(event) =>
-              handleUpdateUISettings({
-                payload: event.target.checked
-                  ? hidden.filter((item) => item !== section)
-                  : [...hidden, section],
-                type: 'settings_hidden_sections',
-              })
-            }
-          />
-          {SECTION_LABELS[section]}
-        </label>
-      ))}
+      <ul className="m-0 grid list-none grid-cols-2 gap-x-m p-0 sm:gap-x-l">
+        {SIDEBAR_SECTIONS.map((section) => {
+          const isShown = !hidden.includes(section)
+
+          return (
+            <li key={section}>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isShown}
+                className="focus flex w-full items-center justify-between gap-2xs py-3xs text-step--1 text-theme11 sm:py-2xs"
+                onClick={() =>
+                  handleUpdateUISettings({
+                    payload: isShown
+                      ? [...hidden, section]
+                      : hidden.filter((item) => item !== section),
+                    type: 'settings_hidden_sections',
+                  })
+                }
+              >
+                <span className="truncate">{SECTION_LABELS[section]}</span>
+                <span
+                  className={cn(
+                    'relative h-4 w-7 shrink-0 rounded-full transition-colors',
+                    isShown ? 'bg-accent9' : 'bg-theme5',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'absolute top-0.5 size-3 rounded-full bg-white transition-all',
+                      isShown ? 'left-3.5' : 'left-0.5',
+                    )}
+                  />
+                </span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
     </fieldset>
   )
 }
