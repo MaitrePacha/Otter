@@ -66,7 +66,7 @@ export const JournalEntryItem = ({
         </Flex>
       ) : null}
       <Markdown preventClamping>{entry.entry ?? ''}</Markdown>
-      <Flex align="center" gap="s" className="mt-s">
+      <Flex align="center" gap="3xs" className="journal-entry-actions mt-s">
         {entry.journals?.name && onSelectJournal ? (
           <Button
             variant="outline"
@@ -79,14 +79,14 @@ export const JournalEntryItem = ({
         ) : null}
         <Button
           variant="ghost"
-          size="2xs"
+          size="xs"
           type="button"
           onClick={() => onEdit(entry)}
         >
           <PencilSimpleIcon size={16} weight="duotone" />
           Edit
         </Button>
-        <Button variant="ghost" size="2xs" type="button" onClick={handleDelete}>
+        <Button variant="ghost" size="xs" type="button" onClick={handleDelete}>
           <TrashIcon size={16} weight="duotone" />
           Delete
         </Button>

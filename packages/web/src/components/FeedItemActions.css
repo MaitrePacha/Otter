@@ -14,9 +14,10 @@
   }
 }
 
-/* More and Edit stand out: brighter, bolder text, and the accent on
-   hover */
-.feed-item-actions .button-ghost {
+/* More and Edit, and a journal entry's Edit and Delete, stand out:
+   brighter, bolder text, and a grey background on hover */
+.feed-item-actions .button-ghost,
+.journal-entry-actions .button-ghost {
   gap: var(--space-3xs);
   border-color: transparent;
   border-radius: var(--radii-m);
@@ -27,7 +28,7 @@
   &:hover,
   &[data-state="open"] {
     border-color: transparent;
-    background-color: var(--accent4);
-    color: var(--accent11);
+    background-color: var(--theme5);
+    color: var(--theme12);
   }
 }
