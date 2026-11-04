@@ -1,9 +1,12 @@
 import {
   ArrowCounterClockwiseIcon,
+  BookmarkSimpleIcon,
   CalendarBlankIcon,
   CheckSquareIcon,
   ChecksIcon,
+  ClockCounterClockwiseIcon,
   TrashIcon,
+  XIcon,
 } from '@phosphor-icons/react'
 import {
   useSuspenseInfiniteQuery,
@@ -18,6 +21,7 @@ import { JournalEntryItem } from '@/components/JournalEntryItem'
 import { Link } from '@/components/Link'
 import { PageToolbar } from '@/components/PageToolbar'
 import { CONTENT, createTitle } from '@/constants'
+import { useFeedOptions } from '@/hooks/useFeedOptions'
 import type { Bookmark } from '@/types/db'
 import { cn } from '@/utils/classnames'
 import { apiParameters } from '@/utils/fetching/apiParameters'
@@ -51,7 +55,7 @@ export const Route = createFileRoute('/_app/trash')({
 const trashViews = (view: 'journal' | undefined) => [
   {
     href: '/trash',
-    icon: <TrashIcon weight="duotone" size={18} />,
+    icon: <BookmarkSimpleIcon weight="duotone" size={18} />,
     isActive: view !== 'journal',
     search: { view: undefined },
     text: 'Bookmarks',
@@ -111,7 +115,15 @@ function JournalTrash() {
   const { data } = useSuspenseQuery(
     getJournalEntriesOptions({ status: 'deleted' }),
   )
-  const entries = data?.data ?? []
+  const { windowQuery, setWindowQuery } = useFeedOptions()
+  // Same 7-day windows as the bookmarks, on the date each entry was created
+  const entries = (data?.data ?? []).filter((entry) => {
+    if (!windowQuery || !entry.created_at) {
+      return true
+    }
+    const age = (Date.now() - new Date(entry.created_at).getTime()) / 86_400_000
+    return age < windowQuery * 7 && age >= (windowQuery - 1) * 7
+  })
   const batchMutation = useBatchUpdateJournalEntries()
   const [isSelecting, setIsSelecting] = useState(false)
   const [selection, setSelection] = useState<Set<number>>(() => new Set())
@@ -162,6 +174,31 @@ function JournalTrash() {
         {CONTENT.trashTitle}
       </h3>
       <PageToolbar>
+        <Button
+          onClick={() => setWindowQuery((prev) => prev + 1)}
+          size="xs"
+          variant="ghost"
+          aria-pressed={windowQuery > 0}
+          title="Click again to go back another 7 days"
+        >
+          <ClockCounterClockwiseIcon
+            size={16}
+            weight={windowQuery > 0 ? 'fill' : 'duotone'}
+          />{' '}
+          {windowQuery > 1
+            ? `${(windowQuery - 1) * 7 + 1}–${windowQuery * 7} days ago`
+            : 'Last 7 days'}
+        </Button>
+        {windowQuery > 0 ? (
+          <Button
+            onClick={() => setWindowQuery(0)}
+            size="xs"
+            variant="ghost"
+            aria-label="Clear date filter"
+          >
+            <XIcon size={16} />
+          </Button>
+        ) : null}
         <Button
           size="xs"
           variant="ghost"
