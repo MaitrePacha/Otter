@@ -171,7 +171,7 @@ export const FeedItemFooter = (props: FeedItemFooterProps) => {
             </ul>
           </Flex>
         ) : null}
-        <Flex justify="between" gap="3xs" wrap="wrap">
+        <Flex justify="between" gapX="3xs" gapY="xs" wrap="wrap">
           <Flex align="center" gapX="2xs" gapY="2xs" wrap="wrap">
             {url ? (
               <>
