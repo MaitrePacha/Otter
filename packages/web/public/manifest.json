@@ -1,11 +1,11 @@
 {
-  "background_color": "hsl(60 6% 9%)",
+  "background_color": "#584892",
   "description": "Bookmarking app by Zander Martineau",
   "display": "minimal-ui",
   "icons": [
     {
-      "sizes": "1200x1200",
-      "src": "/apple-icon.png",
+      "sizes": "512x512",
+      "src": "/icon-splash-512.png",
       "type": "image/png"
     },
     {
