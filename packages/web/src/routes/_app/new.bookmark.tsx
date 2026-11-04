@@ -31,13 +31,16 @@ export const Route = createFileRoute('/_app/new/bookmark')({
     bookmarklet: search.bookmarklet,
     url: search.url,
   }),
+  // Android's share menu (manifest.json share_target) hands the shared link
+  // over as text rather than url
   validateSearch: (search: {
     url?: string
     bookmarklet?: string
+    text?: string
   }): { url?: string; bookmarklet?: string } => {
     return {
       bookmarklet: search.bookmarklet,
-      url: search.url,
+      url: search.url || search.text?.trim() || undefined,
     }
   },
 })
