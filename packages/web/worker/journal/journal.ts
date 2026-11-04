@@ -20,6 +20,7 @@ const journalToRow = (item: JournalRow): Journal => ({
   name: item.name,
   owner: item.owner,
   status: item.status,
+  tags: item.tags ?? [],
 })
 
 const journalEntryToRow = (
@@ -100,6 +101,17 @@ const toJournalSet = (body: Record<string, unknown>) => {
     values.description = body.description as string | null
   if ('name' in body) values.name = body.name as string
   if ('status' in body) values.status = body.status as typeof values.status
+  // Same tags as bookmarks: trimmed, without blanks or duplicates
+  if ('tags' in body)
+    values.tags = Array.isArray(body.tags)
+      ? [
+          ...new Set(
+            body.tags
+              .map((tag) => String(tag).trim())
+              .filter((tag) => tag.length > 0),
+          ),
+        ]
+      : null
 
   return values
 }

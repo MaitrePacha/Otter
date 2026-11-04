@@ -227,6 +227,7 @@ export interface Journal {
   name: string
   owner: string | null
   status: JournalStatus
+  tags: string[]
 }
 
 export type JournalInsert = Omit<
