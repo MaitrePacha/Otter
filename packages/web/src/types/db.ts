@@ -265,6 +265,8 @@ export type JournalEntryUpdate = Partial<JournalEntryInsert>
 
 export interface JournalEntryFilters {
   journal?: number
+  /** The trash lists the deleted ones */
+  status?: JournalStatus
 }
 
 export type ReadingState = 'pending' | 'ready' | 'failed' | 'archived'
