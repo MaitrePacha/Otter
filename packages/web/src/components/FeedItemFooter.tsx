@@ -91,6 +91,8 @@ export const FeedItemFooter = (props: FeedItemFooterProps) => {
           : { see_later: !seeLater }
     await updateBookmark(id, updateData)
     await queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
+    // A collection's page has its own query
+    await queryClient.invalidateQueries({ queryKey: ['collections'] })
     if (column === 'see_later') {
       // The See later count in the sidebar
       await queryClient.invalidateQueries({ queryKey: ['meta'] })
@@ -237,20 +239,25 @@ export const FeedItemFooter = (props: FeedItemFooterProps) => {
               </Tooltip>
             ) : null}
 
-            {/* Only to take a bookmark off the list: bookmarks go on it when
-                they are saved */}
-            {seeLater && allowDeletion === false ? (
+            {allowDeletion === false ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <IconButton
                     onClick={() => handleToggleState('see_later')}
                     size="s"
-                    aria-label="Remove from See later"
+                    aria-label={
+                      seeLater ? 'Remove from See later' : 'Add to See later'
+                    }
                   >
-                    <HourglassMediumIcon size={16} weight="fill" />
+                    <HourglassMediumIcon
+                      size={16}
+                      weight={seeLater ? 'fill' : 'duotone'}
+                    />
                   </IconButton>
                 </TooltipTrigger>
-                <TooltipContent>Remove from See later</TooltipContent>
+                <TooltipContent>
+                  {seeLater ? 'Remove from See later' : 'Add to See later'}
+                </TooltipContent>
               </Tooltip>
             ) : null}
 
