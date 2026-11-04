@@ -1,10 +1,8 @@
-import { CheckIcon, EyeSlashIcon } from '@phosphor-icons/react'
 import { createFileRoute } from '@tanstack/react-router'
 import { CodeBlock } from '@/components/CodeBlock'
 import { UpdateInfoForm } from '@/components/UpdateInfoForm'
 import { useUser } from '@/components/UserProvider'
 import { SIDEBAR_SECTIONS, type SidebarSection } from '@/types/db'
-import { cn } from '@/utils/classnames'
 import { getSession } from '@/utils/fetching/user'
 
 export const Route = createFileRoute('/_app/settings/account')({
@@ -41,47 +39,27 @@ const SidebarSectionsSetting = () => {
   const { profile, handleUpdateUISettings } = useUser()
   const hidden = profile?.settings_hidden_sections ?? []
 
-  // A row of toggles in the sidebar tabs' style: a shown section looks like
-  // the active tab, a hidden one like an idle tab
   return (
-    <fieldset>
-      <legend className="mb-2xs ml-1 text-step--2 uppercase tracking-wide">
-        Show in the sidebar
-      </legend>
-      <div className="flex flex-wrap gap-3xs">
-        {SIDEBAR_SECTIONS.map((section) => {
-          const isShown = !hidden.includes(section)
-
-          return (
-            <button
-              key={section}
-              type="button"
-              aria-pressed={isShown}
-              className={cn(
-                'focus flex items-center gap-3xs rounded-md px-2xs py-3xs text-step--2 font-medium',
-                isShown
-                  ? 'bg-accent6 text-accent11 hover:bg-accent7'
-                  : 'text-theme10 hover:bg-theme5 hover:text-theme11',
-              )}
-              onClick={() =>
-                handleUpdateUISettings({
-                  payload: isShown
-                    ? [...hidden, section]
-                    : hidden.filter((item) => item !== section),
-                  type: 'settings_hidden_sections',
-                })
-              }
-            >
-              {isShown ? (
-                <CheckIcon size={14} weight="bold" />
-              ) : (
-                <EyeSlashIcon size={14} weight="duotone" />
-              )}
-              {SECTION_LABELS[section]}
-            </button>
-          )
-        })}
-      </div>
+    <fieldset className="flex flex-wrap gap-x-m gap-y-2xs">
+      <legend className="mb-2xs">Show in the sidebar</legend>
+      {SIDEBAR_SECTIONS.map((section) => (
+        <label key={section} className="flex items-center gap-2xs">
+          <input
+            type="checkbox"
+            className="size-5 shrink-0 cursor-pointer accent-accent9"
+            checked={!hidden.includes(section)}
+            onChange={(event) =>
+              handleUpdateUISettings({
+                payload: event.target.checked
+                  ? hidden.filter((item) => item !== section)
+                  : [...hidden, section],
+                type: 'settings_hidden_sections',
+              })
+            }
+          />
+          {SECTION_LABELS[section]}
+        </label>
+      ))}
     </fieldset>
   )
 }
