@@ -40,7 +40,7 @@ const SidebarSectionsSetting = () => {
   const { profile, handleUpdateUISettings } = useUser()
   const hidden = profile?.settings_hidden_sections ?? []
 
-  // Two columns of switches, also on phones to keep the list short
+  // Two columns of switches, also on phones
   return (
     <fieldset>
       <legend className="mb-2xs">Show in the sidebar</legend>
@@ -54,7 +54,7 @@ const SidebarSectionsSetting = () => {
                 type="button"
                 role="switch"
                 aria-checked={isShown}
-                className="focus flex w-full items-center justify-between gap-2xs py-3xs text-step--1 text-theme11 sm:py-2xs"
+                className="focus flex w-full items-center justify-between gap-2xs py-2xs text-step--1 text-theme11"
                 onClick={() =>
                   handleUpdateUISettings({
                     payload: isShown
