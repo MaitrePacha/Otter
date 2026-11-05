@@ -14,20 +14,33 @@ const isUnder = (tag: string, parent: string) => {
 }
 
 interface CollectionJournalsProps {
+  /** The collection, or the tag on a tag's page */
   collection: string
   /** The selected folders or sub-folders; none shows the whole collection */
   filterTags: string[]
+  /** On a tag's page: only journals with that very tag, as for bookmarks */
+  exact?: boolean
 }
 
-/** The journals tagged in a collection, each opening the Journal page */
+/**
+ * The journals tagged in a collection (or with a tag), each opening the
+ * Journal page
+ */
 export const CollectionJournals = ({
   collection,
   filterTags,
+  exact = false,
 }: CollectionJournalsProps) => {
   const { data } = useSuspenseQuery(getJournalsOptions())
   const parents = filterTags.length ? filterTags : [collection]
   const journals = (data?.data ?? []).filter((journal: Journal) =>
-    journal.tags.some((tag) => parents.some((parent) => isUnder(tag, parent))),
+    journal.tags.some((tag) =>
+      parents.some((parent) =>
+        exact
+          ? tag.toLowerCase() === parent.toLowerCase()
+          : isUnder(tag, parent),
+      ),
+    ),
   )
 
   const { data: entries } = useSuspenseQuery(getJournalEntriesOptions())

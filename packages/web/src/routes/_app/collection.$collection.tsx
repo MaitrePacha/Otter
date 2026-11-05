@@ -1,21 +1,12 @@
-import {
-  BookmarksSimpleIcon,
-  FolderIcon,
-  NotebookIcon,
-  PlusCircleIcon,
-} from '@phosphor-icons/react'
+import { FolderIcon } from '@phosphor-icons/react'
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query'
-import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
-import { useState } from 'react'
-import { Button } from '@/components/Button'
+import { createFileRoute, useSearch } from '@tanstack/react-router'
 import { CollectionFilters } from '@/components/CollectionFilters'
 import { CollectionJournals } from '@/components/CollectionJournals'
-import { Dialog, DialogContent, DialogTrigger } from '@/components/Dialog'
 import { Feed } from '@/components/Feed'
 import { headingVariants } from '@/components/Heading'
-import { JournalForm } from '@/components/JournalForm'
-import { PageToolbar } from '@/components/PageToolbar'
-import { ShareDialog } from '@/components/ShareDialog'
+import { JournalsToolbar } from '@/components/JournalsToolbar'
+import { ViewSwitch } from '@/components/ViewSwitch'
 import {
   getFilterTags,
   useCollectionFolders,
@@ -54,91 +45,6 @@ export const Route = createFileRoute('/_app/collection/$collection')({
   },
 })
 
-const VIEWS = [
-  {
-    icon: <BookmarksSimpleIcon size={18} weight="duotone" />,
-    label: 'Bookmarks',
-    value: undefined,
-  },
-  {
-    icon: <NotebookIcon size={18} weight="duotone" />,
-    label: 'Journals',
-    value: 'journals',
-  },
-] as const
-
-/** Two small icon buttons switching between the bookmarks and the journals */
-const ViewSwitch = ({ view }: { view: 'journals' | undefined }) => {
-  const navigate = useNavigate()
-
-  return (
-    <div className="flex gap-4xs">
-      {VIEWS.map(({ icon, label, value }) => (
-        <button
-          key={label}
-          type="button"
-          aria-label={label}
-          aria-pressed={view === value}
-          title={label}
-          className={cn(
-            'focus grid size-8 place-items-center rounded-md',
-            // The sidebar's state colours
-            view === value
-              ? 'bg-accent6 text-accent11 hover:bg-accent7 hover:text-theme11'
-              : 'text-theme10 hover:bg-theme5 hover:text-theme11',
-          )}
-          onClick={() =>
-            navigate({
-              resetScroll: false,
-              search: (prev: Record<string, unknown>) => ({
-                ...prev,
-                view: value,
-              }),
-              to: '.',
-            })
-          }
-        >
-          {icon}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-/**
- * The Journals view's toolbar: share the collection, as in the Bookmarks
- * view, or create a journal already tagged with the selected folders (or
- * the collection)
- */
-const JournalsToolbar = ({
-  collection,
-  tags,
-}: {
-  collection: string
-  tags: string[]
-}) => {
-  const [isOpen, setIsOpen] = useState(false)
-
-  return (
-    <PageToolbar>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button size="xs" variant="ghost">
-            <PlusCircleIcon size={16} weight="duotone" /> New journal
-          </Button>
-        </DialogTrigger>
-        <DialogContent placement="center" width="m">
-          <JournalForm
-            defaultTags={tags.length ? tags : [collection]}
-            onSubmitted={() => setIsOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
-      <ShareDialog kind="collection" name={collection} />
-    </PageToolbar>
-  )
-}
-
 function Page() {
   const collection = Route.useParams().collection
   const {
@@ -174,7 +80,11 @@ function Page() {
           <FolderIcon weight="duotone" size={24} />
           {collection}
         </h3>
-        <JournalsToolbar collection={collection} tags={tags} />
+        <JournalsToolbar
+          kind="collection"
+          name={collection}
+          defaultTags={tags.length ? tags : [collection]}
+        />
         <div className="mt-xs">{filters}</div>
         <div className="mt-m max-w-prose">
           <CollectionJournals collection={collection} filterTags={tags} />
