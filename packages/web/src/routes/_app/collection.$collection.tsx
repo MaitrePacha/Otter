@@ -9,7 +9,6 @@ import { CollectionFilters } from '@/components/CollectionFilters'
 import { CollectionJournals } from '@/components/CollectionJournals'
 import { Feed } from '@/components/Feed'
 import { headingVariants } from '@/components/Heading'
-import { IconControl } from '@/components/IconControl'
 import {
   getFilterTags,
   useCollectionFolders,
@@ -61,23 +60,26 @@ const VIEWS = [
   },
 ] as const
 
-/** Square icon tiles switching between the bookmarks and the journals */
+/** Two small icon buttons switching between the bookmarks and the journals */
 const ViewSwitch = ({ view }: { view: 'journals' | undefined }) => {
   const navigate = useNavigate()
 
   return (
-    <div className="flex gap-2xs">
+    <div className="flex gap-4xs">
       {VIEWS.map(({ icon, label, value }) => (
-        <IconControl
+        <button
           key={label}
-          type="radio"
-          name="collection-view"
-          value={value ?? 'bookmarks'}
-          label=""
+          type="button"
           aria-label={label}
+          aria-pressed={view === value}
           title={label}
-          checked={view === value}
-          onChange={() =>
+          className={cn(
+            'focus grid size-8 place-items-center rounded-md',
+            view === value
+              ? 'bg-theme5 text-theme12'
+              : 'text-theme9 hover:text-theme12',
+          )}
+          onClick={() =>
             navigate({
               resetScroll: false,
               search: (prev: Record<string, unknown>) => ({
@@ -89,7 +91,7 @@ const ViewSwitch = ({ view }: { view: 'journals' | undefined }) => {
           }
         >
           {icon}
-        </IconControl>
+        </button>
       ))}
     </div>
   )
@@ -111,7 +113,6 @@ function Page() {
     <div className="flex flex-col gap-xs">
       <ViewSwitch view={view} />
       <CollectionFilters
-        collection={collection}
         folders={folders}
         selectedFolders={selectedFolders}
         selectedTags={selectedTags}
