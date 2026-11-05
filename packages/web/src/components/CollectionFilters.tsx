@@ -13,8 +13,7 @@ const toggle = (list: string[], item: string) =>
   list.includes(item) ? list.filter((value) => value !== item) : [...list, item]
 
 /**
- * Two rows of filters on a collection's page: its folders as small chips in
- * the sidebar's colours, then the sub-folders of the selected folders as plain text. Both live in the page's search
+ * Two rows of filters on a collection's page: its folders as small grey chips, then the sub-folders of the selected folders as plain text. Both live in the page's search
  * params, so a filtered view can be bookmarked.
  */
 export const CollectionFilters = ({
@@ -49,13 +48,12 @@ export const CollectionFilters = ({
               key={folder.tag}
               type="button"
               aria-pressed={isSelected}
-              // The sidebar's colours: no background until hovered, violet once
-              // selected, and the hover grey text over a lighter violet
+              // Greys only: the violet is kept for Bookmarks / Journals
               className={cn(
                 'focus rounded-md px-2xs py-3xs text-step--2',
                 isSelected
-                  ? 'bg-accent6 font-medium text-accent11 hover:bg-accent7 hover:text-theme11'
-                  : 'text-theme10 hover:bg-theme5 hover:text-theme11',
+                  ? 'bg-theme5 text-theme12'
+                  : 'text-theme9 hover:text-theme12',
               )}
               onClick={() =>
                 navigate({
@@ -89,7 +87,7 @@ export const CollectionFilters = ({
                   className={cn(
                     'focus text-step--2',
                     isActive
-                      ? 'text-accent11'
+                      ? 'font-medium text-theme12'
                       : 'text-theme9 hover:text-theme12',
                   )}
                   onClick={() =>
