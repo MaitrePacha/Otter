@@ -12,11 +12,17 @@ import { Input } from './Input'
 interface JournalFormProps {
   /** Edits this journal; without it, creates a new one */
   journal?: Journal
+  /** Tags a new journal starts with */
+  defaultTags?: string[]
   onSubmitted: () => void
 }
 
 /** A journal's name, description and tags, which file it in collections */
-export const JournalForm = ({ journal, onSubmitted }: JournalFormProps) => {
+export const JournalForm = ({
+  journal,
+  defaultTags = [],
+  onSubmitted,
+}: JournalFormProps) => {
   const createJournalMutation = useCreateJournal()
   const updateJournalMutation = useUpdateJournal()
   const { data: tags } = useQuery(getTagsOptions())
@@ -24,7 +30,7 @@ export const JournalForm = ({ journal, onSubmitted }: JournalFormProps) => {
     defaultValues: {
       description: journal?.description ?? '',
       name: journal?.name ?? '',
-      tags: journal?.tags ?? [],
+      tags: journal?.tags ?? defaultTags,
     },
   })
   const tagOptions = tags

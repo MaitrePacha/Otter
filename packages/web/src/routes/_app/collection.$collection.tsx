@@ -2,13 +2,20 @@ import {
   BookmarksSimpleIcon,
   FolderIcon,
   NotebookIcon,
+  PlusCircleIcon,
 } from '@phosphor-icons/react'
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
+import { useState } from 'react'
+import { Button } from '@/components/Button'
 import { CollectionFilters } from '@/components/CollectionFilters'
 import { CollectionJournals } from '@/components/CollectionJournals'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/Dialog'
 import { Feed } from '@/components/Feed'
 import { headingVariants } from '@/components/Heading'
+import { JournalForm } from '@/components/JournalForm'
+import { PageToolbar } from '@/components/PageToolbar'
+import { ShareDialog } from '@/components/ShareDialog'
 import {
   getFilterTags,
   useCollectionFolders,
@@ -97,6 +104,40 @@ const ViewSwitch = ({ view }: { view: 'journals' | undefined }) => {
   )
 }
 
+/**
+ * The Journals view's toolbar: share the collection, as in the Bookmarks
+ * view, or create a journal already tagged with the selected folders (or
+ * the collection)
+ */
+const JournalsToolbar = ({
+  collection,
+  tags,
+}: {
+  collection: string
+  tags: string[]
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <PageToolbar>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button size="xs" variant="ghost">
+            <PlusCircleIcon size={16} weight="duotone" /> New journal
+          </Button>
+        </DialogTrigger>
+        <DialogContent placement="center" width="m">
+          <JournalForm
+            defaultTags={tags.length ? tags : [collection]}
+            onSubmitted={() => setIsOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+      <ShareDialog kind="collection" name={collection} />
+    </PageToolbar>
+  )
+}
+
 function Page() {
   const collection = Route.useParams().collection
   const {
@@ -132,6 +173,7 @@ function Page() {
           <FolderIcon weight="duotone" size={24} />
           {collection}
         </h3>
+        <JournalsToolbar collection={collection} tags={tags} />
         <div className="mt-xs">{filters}</div>
         <div className="mt-m max-w-prose">
           <CollectionJournals collection={collection} filterTags={tags} />
