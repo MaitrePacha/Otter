@@ -1,34 +1,29 @@
 import {
+  CheckIcon,
   CheckSquareIcon,
   ChecksIcon,
   CircleIcon,
   NotebookIcon,
+  PencilSimpleIcon,
   PlusCircleIcon,
   TrashIcon,
 } from '@phosphor-icons/react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
 import { Button } from '@/components/Button'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/Dialog'
-import { FormGroup } from '@/components/FormGroup'
 import { IconControl } from '@/components/IconControl'
-import { Input } from '@/components/Input'
 import { JournalEntryForm } from '@/components/JournalEntryForm'
 import { JournalEntryItem } from '@/components/JournalEntryItem'
+import { JournalForm } from '@/components/JournalForm'
 import { PageToolbar } from '@/components/PageToolbar'
 import { createTitle } from '@/constants'
-import type {
-  JournalEntry,
-  JournalEntryInsert,
-  JournalInsert,
-} from '@/types/db'
+import type { Journal, JournalEntry, JournalEntryInsert } from '@/types/db'
 import {
   getJournalEntriesOptions,
   getJournalsOptions,
   useBatchUpdateJournalEntries,
-  useCreateJournal,
   useCreateJournalEntry,
   useDeleteJournal,
   useUpdateJournalEntry,
@@ -50,59 +45,20 @@ export const Route = createFileRoute('/_app/journal')({
     ])
     return { entries, journals }
   },
+  // A link can open the page on one journal, as a collection's page does
+  validateSearch: (search: Record<string, unknown>) => ({
+    journal: Number(search.journal) || undefined,
+  }),
 })
 
-function NewJournalForm({ onSubmitted }: { onSubmitted: () => void }) {
-  const createJournalMutation = useCreateJournal()
-  const { register, handleSubmit, reset } = useForm<JournalInsert>({
-    defaultValues: { description: '', name: '' },
-  })
-
-  const handleSubmitForm = (formData: JournalInsert) => {
-    createJournalMutation.mutate(formData, {
-      onSuccess: () => {
-        reset()
-        onSubmitted()
-      },
-    })
-  }
-
-  return (
-    <div>
-      <h2 className="mb-s">New journal</h2>
-      <form
-        onSubmit={handleSubmit(handleSubmitForm)}
-        className="flex flex-col gap-s"
-      >
-        <FormGroup label="Name" name="name">
-          <Input
-            id="name"
-            placeholder="Journal name"
-            autoComplete="off"
-            autoFocus
-            {...register('name', { required: true })}
-          />
-        </FormGroup>
-        <FormGroup label="Description" name="description">
-          <Input
-            id="description"
-            placeholder="Optional description"
-            autoComplete="off"
-            {...register('description')}
-          />
-        </FormGroup>
-        <div>
-          <Button type="submit">Create</Button>
-        </div>
-      </form>
-    </div>
-  )
-}
-
 function RouteComponent() {
-  const [journalFilter, setJournalFilter] = useState<number | undefined>()
+  const { journal: initialJournal } = Route.useSearch()
+  const [journalFilter, setJournalFilter] = useState<number | undefined>(
+    initialJournal,
+  )
   const [isEntryDialogOpen, setIsEntryDialogOpen] = useState(false)
   const [isJournalDialogOpen, setIsJournalDialogOpen] = useState(false)
+  const [editingJournal, setEditingJournal] = useState<Journal | null>(null)
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null)
   const { data: entriesResponse } = useSuspenseQuery(getJournalEntriesOptions())
   const { data: journalsResponse } = useSuspenseQuery(getJournalsOptions())
@@ -238,6 +194,23 @@ function RouteComponent() {
                 checked={journalFilter === journalItem.id}
               >
                 <NotebookIcon size={18} weight="duotone" />
+                {/* On the selected journal, the check turns into a pencil
+                    on hover to edit the journal */}
+                {journalFilter === journalItem.id ? (
+                  <button
+                    type="button"
+                    className="journal-tile-edit focus"
+                    aria-label={`Edit ${journalItem.name}`}
+                    title="Edit journal"
+                    onClick={(event) => {
+                      event.preventDefault()
+                      setEditingJournal(journalItem)
+                    }}
+                  >
+                    <CheckIcon className="journal-tile-edit-check" />
+                    <PencilSimpleIcon className="journal-tile-edit-pencil" />
+                  </button>
+                ) : null}
               </IconControl>
             ))}
           </div>
@@ -265,9 +238,20 @@ function RouteComponent() {
               </Button>
             </DialogTrigger>
             <DialogContent placement="center" width="m">
-              <NewJournalForm
-                onSubmitted={() => setIsJournalDialogOpen(false)}
-              />
+              <JournalForm onSubmitted={() => setIsJournalDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
+          <Dialog
+            open={Boolean(editingJournal)}
+            onOpenChange={(open) => !open && setEditingJournal(null)}
+          >
+            <DialogContent placement="center" width="m">
+              {editingJournal ? (
+                <JournalForm
+                  journal={editingJournal}
+                  onSubmitted={() => setEditingJournal(null)}
+                />
+              ) : null}
             </DialogContent>
           </Dialog>
           <Dialog

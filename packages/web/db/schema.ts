@@ -473,6 +473,7 @@ export const journals = pgTable(
     name: text('name').notNull(),
     owner: uuid('owner').references(() => authUsers.id),
     status: journalStatusEnum('status').notNull().default('active'),
+    tags: text('tags').array(),
   },
   (table) => [index('journals_owner_idx').on(table.owner)],
 )

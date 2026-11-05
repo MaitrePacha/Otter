@@ -1,12 +1,9 @@
-import { HashIcon } from '@phosphor-icons/react'
 import { useNavigate } from '@tanstack/react-router'
 import type { CollectionFolder } from '@/hooks/useCollectionFolders'
 import { cn } from '@/utils/classnames'
 import { Flex } from './Flex'
-import { Link } from './Link'
 
 interface CollectionFiltersProps {
-  collection: string
   folders: CollectionFolder[]
   selectedFolders: string[]
   selectedTags: string[]
@@ -16,18 +13,16 @@ const toggle = (list: string[], item: string) =>
   list.includes(item) ? list.filter((value) => value !== item) : [...list, item]
 
 /**
- * Two rows of filters on a collection's page: its folders as pills, then
- * the sub-folders of the selected folders. Both live in the page's search
+ * Two rows of filters on a collection's page: its folders as small grey
+ * chips, then the sub-folders of the selected folders as plain text. Both live in the page's search
  * params, so a filtered view can be bookmarked.
  */
 export const CollectionFilters = ({
-  collection,
   folders,
   selectedFolders,
   selectedTags,
 }: CollectionFiltersProps) => {
   const navigate = useNavigate()
-  const href = `/collection/${encodeURIComponent(collection)}`
   const openFolders = folders.filter(
     (folder) => selectedFolders.includes(folder.tag) && folder.children.length,
   )
@@ -54,11 +49,12 @@ export const CollectionFilters = ({
               key={folder.tag}
               type="button"
               aria-pressed={isSelected}
+              // The sidebar's colours: grey, then violet once selected
               className={cn(
-                'focus rounded-full border px-xs py-3xs text-step--2',
+                'focus rounded-md px-2xs py-3xs text-step--2',
                 isSelected
-                  ? 'border-accent9 bg-accent9 text-white'
-                  : 'border-theme6 text-theme11 hover:border-theme8',
+                  ? 'bg-accent6 font-medium text-accent11 hover:bg-accent7'
+                  : 'bg-theme3 text-theme10 hover:bg-theme5 hover:text-theme11',
               )}
               onClick={() =>
                 navigate({
@@ -78,37 +74,43 @@ export const CollectionFilters = ({
         })}
       </div>
       {openFolders.length ? (
-        <Flex gapX="3xs" gapY="3xs" wrap="wrap">
+        <div className="flex flex-wrap gap-x-s gap-y-3xs pl-3xs">
           {openFolders.flatMap((folder) =>
             folder.children.map((child) => {
               const isActive = selectedTags.includes(child.tag)
               const nextTags = toggle(selectedTags, child.tag)
 
               return (
-                <Link
+                <button
                   key={child.tag}
-                  href={href}
-                  // @ts-expect-error How do I type search params?
-                  search={(prev: Record<string, unknown>) => ({
-                    ...prev,
-                    tags: nextTags.length ? nextTags : undefined,
-                  })}
-                  variant="sidebar"
-                  isActive={isActive}
+                  type="button"
                   aria-pressed={isActive}
-                  resetScroll={false}
+                  className={cn(
+                    'focus text-step--2',
+                    isActive
+                      ? 'text-accent11'
+                      : 'text-theme9 hover:text-theme12',
+                  )}
+                  onClick={() =>
+                    navigate({
+                      resetScroll: false,
+                      search: (prev: Record<string, unknown>) => ({
+                        ...prev,
+                        tags: nextTags.length ? nextTags : undefined,
+                      }),
+                      to: '.',
+                    })
+                  }
                 >
-                  <div className="link-sidebar-inner">
-                    <HashIcon weight="duotone" size={18} />
-                    {openFolders.length > 1
-                      ? `${folder.label}:${child.label}`
-                      : child.label}
-                  </div>
-                </Link>
+                  ↳{' '}
+                  {openFolders.length > 1
+                    ? `${folder.label}:${child.label}`
+                    : child.label}
+                </button>
               )
             }),
           )}
-        </Flex>
+        </div>
       ) : null}
     </Flex>
   )

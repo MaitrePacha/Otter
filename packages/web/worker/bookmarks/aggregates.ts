@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm'
 import type { CollectionType, MetaTag, MetaType } from '@/utils/fetching/meta'
 import type { Db } from '../../db/client'
-import { bookmarks } from '../../db/schema'
+import { bookmarks, journals } from '../../db/schema'
 
 // SQL aggregations over a user's active bookmarks. These all used to load
 // every bookmark row into Worker memory and reduce in JS; they now run as
@@ -62,7 +62,8 @@ export const getTypeCounts = async (
   return result.rows.map((row) => ({ count: row.count, type: row.type }))
 }
 
-// A collection is the prefix of any tag formatted `<name>:<rest>`
+// A collection is the prefix of any tag formatted `<name>:<rest>`, on a
+// bookmark or a journal, and its count includes both
 // (`ai:openai` → `ai`). Tags without a colon are not collections, but a
 // bookmark tagged with a bare `name` still counts towards collection `name`
 // if that collection exists.
@@ -76,9 +77,13 @@ export const getCollections = async (
     tags: string[]
   }>(sql`
     WITH user_tags AS (
-      SELECT ${bookmarks.id} AS id, t.tag AS tag
+      SELECT 'b' || ${bookmarks.id} AS id, t.tag AS tag
       FROM ${bookmarks}, LATERAL unnest(${bookmarks.tags}) AS t(tag)
       WHERE ${bookmarks.user} = ${userId} AND ${bookmarks.status} = 'active'
+      UNION ALL
+      SELECT 'j' || ${journals.id} AS id, t.tag AS tag
+      FROM ${journals}, LATERAL unnest(${journals.tags}) AS t(tag)
+      WHERE ${journals.owner} = ${userId} AND ${journals.status} = 'active'
     ),
     collections AS (
       SELECT DISTINCT split_part(tag, ':', 1) AS collection

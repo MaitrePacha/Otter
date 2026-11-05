@@ -116,6 +116,9 @@ export const useCreateJournal = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journals'] })
+      // A journal's tags count in collections
+      queryClient.invalidateQueries({ queryKey: ['meta'] })
+      queryClient.invalidateQueries({ queryKey: ['collectionsTags'] })
       toast.success('Journal created successfully')
     },
   })
@@ -144,6 +147,8 @@ export const useUpdateJournal = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['journals'] })
       queryClient.invalidateQueries({ queryKey: ['journalEntries'] })
+      queryClient.invalidateQueries({ queryKey: ['meta'] })
+      queryClient.invalidateQueries({ queryKey: ['collectionsTags'] })
       toast.success(`${data?.data.name} updated successfully`)
     },
   })
@@ -170,6 +175,8 @@ export const useDeleteJournal = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journals'] })
       queryClient.invalidateQueries({ queryKey: ['journalEntries'] })
+      queryClient.invalidateQueries({ queryKey: ['meta'] })
+      queryClient.invalidateQueries({ queryKey: ['collectionsTags'] })
       toast.success('Journal deleted successfully')
     },
   })
