@@ -114,17 +114,12 @@ function RouteComponent() {
     }
   }
 
+  // No confirmation: deleted entries go to the trash
   const handleDeleteEntries = () => {
-    if (
-      confirm(
-        `Are you sure you want to delete ${selectedIds.length} journal ${selectedIds.length === 1 ? 'entry' : 'entries'}?`,
-      )
-    ) {
-      batchMutation.mutate(
-        { action: { type: 'delete' }, ids: selectedIds },
-        { onSuccess: () => setSelection(new Set()) },
-      )
-    }
+    batchMutation.mutate(
+      { action: { type: 'delete' }, ids: selectedIds },
+      { onSuccess: () => setSelection(new Set()) },
+    )
   }
 
   const handleCreateEntry = (formData: JournalEntryInsert) => {

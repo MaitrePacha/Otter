@@ -46,10 +46,9 @@ export const JournalEntryItem = ({
   const deleteJournalEntry = useDeleteJournalEntry()
   const batchMutation = useBatchUpdateJournalEntries()
 
+  // No confirmation: a deleted entry goes to the trash
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this journal entry?')) {
-      deleteJournalEntry.mutate(entry.id)
-    }
+    deleteJournalEntry.mutate(entry.id)
   }
 
   return (
