@@ -7,16 +7,24 @@ import { bookmarks, journals } from '../../db/schema'
 // every bookmark row into Worker memory and reduce in JS; they now run as
 // single queries so cost stays flat as accounts grow.
 
+// Tags of bookmarks and journals: a tag's count includes both
 export const getTagCounts = async (
   db: Db,
   userId: string,
   options?: { includeUntagged?: boolean },
 ): Promise<MetaTag[]> => {
   const result = await db.execute<{ count: number; tag: string }>(sql`
-    SELECT t.tag AS tag, count(*)::int AS count
-    FROM ${bookmarks}, LATERAL unnest(${bookmarks.tags}) AS t(tag)
-    WHERE ${bookmarks.user} = ${userId} AND ${bookmarks.status} = 'active'
-    GROUP BY t.tag
+    SELECT tag, count(*)::int AS count
+    FROM (
+      SELECT t.tag AS tag
+      FROM ${bookmarks}, LATERAL unnest(${bookmarks.tags}) AS t(tag)
+      WHERE ${bookmarks.user} = ${userId} AND ${bookmarks.status} = 'active'
+      UNION ALL
+      SELECT t.tag AS tag
+      FROM ${journals}, LATERAL unnest(${journals.tags}) AS t(tag)
+      WHERE ${journals.owner} = ${userId} AND ${journals.status} = 'active'
+    ) AS all_tags
+    GROUP BY tag
     ORDER BY count DESC, tag ASC
   `)
   const tags: MetaTag[] = result.rows.map((row) => ({
