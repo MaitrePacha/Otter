@@ -1,6 +1,6 @@
 import {
   BookmarksSimpleIcon,
-  FolderIcon,
+  HashIcon,
   NotebookIcon,
   PlusCircleIcon,
 } from '@phosphor-icons/react'
@@ -171,7 +171,7 @@ function Page() {
             'flex items-center gap-2xs',
           )}
         >
-          <FolderIcon weight="duotone" size={24} />
+          <HashIcon weight="duotone" size={24} />
           {collection}
         </h3>
         <JournalsToolbar collection={collection} tags={tags} />
@@ -223,7 +223,7 @@ function CollectionBookmarks({
       limit={search.limit}
       allowGroupByDate={true}
       title={collection}
-      icon={<FolderIcon weight="duotone" size={24} />}
+      icon={<HashIcon weight="duotone" size={24} />}
       feedType="bookmarks"
       filters={filters}
       from={`/collection/${encodeURIComponent(collection)}`}
