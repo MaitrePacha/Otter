@@ -128,6 +128,11 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3xs);
+  /* Whole pixels: when Select adds or removes a row while the page is
+     scrolled, the browser keeps the content in place by scrolling a whole
+     number of pixels, so a fractional row height left everything below
+     a fraction of a pixel off and looking slightly moved */
+  gap: round(var(--space-3xs), 1px);
   padding: var(--space-3xs) var(--space-2xs) var(--space-2xs);
   border-bottom: 1px solid var(--border);
   background-color: var(--background);
@@ -148,6 +153,18 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-3xs);
+  gap: round(var(--space-3xs), 1px);
+
+  /* Same reason: every item, and so every line, is a whole 28px high */
+  & > * {
+    height: 1.75rem;
+  }
+
+  /* Plain text, such as the selection count, centred in that height */
+  & > span {
+    display: inline-flex;
+    align-items: center;
+  }
 
   /* Buttons look like the settings tabs (.link-sidebar): same weight, hover
      and, when pressed, the active tab colours */
