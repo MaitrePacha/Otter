@@ -17,6 +17,7 @@ import type { WorkerEnv } from '../env'
 import { scrapeMetadata } from '../scraper/index'
 import { linkType } from '../scraper/link-type'
 import { bookmarkToRow } from './mapper'
+import { seeLaterOnCreate } from './seeLater'
 import { scheduleBookmarkSideEffects } from './sideEffects'
 
 type HonoContext = Context<{ Bindings: WorkerEnv }>
@@ -59,7 +60,7 @@ const toBookmarkInsert = (
   modifiedAt: bookmark.modified_at ? new Date(bookmark.modified_at) : undefined,
   note: bookmark.note,
   public: bookmark.public,
-  seeLater: bookmark.see_later,
+  seeLater: seeLaterOnCreate(bookmark.see_later, bookmark.tags),
   star: bookmark.star,
   status: bookmark.status as BookmarkStatus | undefined,
   tags: bookmark.tags,

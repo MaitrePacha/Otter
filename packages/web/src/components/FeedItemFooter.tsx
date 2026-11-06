@@ -59,6 +59,7 @@ export const FeedItemFooter = (props: FeedItemFooterProps) => {
     id,
     star,
     see_later: seeLater,
+    showSeeLater = false,
     type,
     click_count,
     isInFeed,
@@ -237,9 +238,9 @@ export const FeedItemFooter = (props: FeedItemFooterProps) => {
               </Tooltip>
             ) : null}
 
-            {/* Only to take a bookmark off the list: bookmarks go on it when
-                they are saved */}
-            {seeLater && allowDeletion === false ? (
+            {/* Only where the list is shown, to take a bookmark off it
+                without tagging it: unsorted bookmarks go on it by themselves */}
+            {seeLater && showSeeLater ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <IconButton

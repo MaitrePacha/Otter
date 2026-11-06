@@ -95,6 +95,7 @@ function DashboardBookmarks() {
         <FeedSimple
           items={seeLaterBookmarks.data as Bookmark[]}
           title={CONTENT.seeLaterTitle}
+          showSeeLater
         />
       ) : null}
       {dashboard?.recent?.length ? (

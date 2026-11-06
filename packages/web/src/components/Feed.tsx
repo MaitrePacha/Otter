@@ -80,7 +80,7 @@ export const Feed = memo(
     subNav,
     filters,
     showFeedOptions = true,
-    from: _from,
+    from,
     hasNextPage = false,
     isFetchingNextPage = false,
     fetchNextPage,
@@ -316,6 +316,7 @@ export const Feed = memo(
                             collections={collectionsTags ?? []}
                             key={item.id}
                             {...selectionProps(item.id)}
+                            showSeeLater={from === '/see-later'}
                           />
                         )
                       })}
@@ -346,6 +347,7 @@ export const Feed = memo(
                     collections={collectionsTags ?? []}
                     key={item.id}
                     {...selectionProps(item.id)}
+                    showSeeLater={from === '/see-later'}
                   />
                 )
               })
