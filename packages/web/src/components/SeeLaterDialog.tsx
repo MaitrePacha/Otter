@@ -1,4 +1,10 @@
-import { EyeIcon, PlusIcon, StarIcon, TrashIcon } from '@phosphor-icons/react'
+import {
+  EyeIcon,
+  PlusIcon,
+  StarIcon,
+  TagIcon,
+  TrashIcon,
+} from '@phosphor-icons/react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   type CSSProperties,
@@ -13,10 +19,27 @@ import type { Bookmark } from '@/types/db'
 import { updateBookmark } from '@/utils/fetching/bookmarks'
 import { getTagsOptions } from '@/utils/fetching/tags'
 import { getErrorMessage } from '@/utils/get-error-message'
-import { Button } from './Button'
+import { Combobox, comboboxStyles } from './Combobox'
 import { Dialog, DialogContent } from './Dialog'
 import { Flex } from './Flex'
-import { Input } from './Input'
+
+const TILE =
+  'focus flex flex-col items-center gap-3xs rounded-lg border-2 border-theme7 p-2xs text-step--2 text-theme10 hover:border-theme9 hover:text-theme12 disabled:opacity-50 aria-pressed:border-theme10 aria-pressed:bg-theme3 aria-pressed:text-theme12'
+
+// The bookmark form's tag list, in a plain field with a violet outline
+const TAG_FIELD_STYLES: Record<string, unknown> = {
+  ...comboboxStyles,
+  // @ts-ignore
+  control: (provided, state) => ({
+    ...provided,
+    ':hover': { borderColor: 'var(--accent9)' },
+    backgroundColor: 'var(--theme2)',
+    borderColor: state.isFocused ? 'var(--accent9)' : 'var(--accent6)',
+    borderRadius: 'var(--radii-m)',
+    boxShadow: 'none',
+    minHeight: 0,
+  }),
+}
 
 // The form a link's href takes once the browser has parsed it
 const toHref = (url: string) => {
@@ -92,7 +115,7 @@ interface SeeLaterDialogProps {
  */
 export const SeeLaterDialog = ({ bookmark, onClose }: SeeLaterDialogProps) => {
   const queryClient = useQueryClient()
-  const tagListId = useId()
+  const tagInputId = useId()
   const { data: tags } = useQuery(getTagsOptions())
   const [tag, setTag] = useState('')
   const [isPending, setIsPending] = useState(false)
@@ -130,6 +153,9 @@ export const SeeLaterDialog = ({ bookmark, onClose }: SeeLaterDialogProps) => {
   }
 
   const trimmedTag = tag.trim()
+  const tagOptions = tags
+    ?.filter((item) => item.tag && item.tag !== 'Untagged')
+    .map((item) => ({ label: item.tag, value: item.tag }))
 
   const tagBookmark = () => {
     if (current && trimmedTag) {
@@ -161,9 +187,11 @@ export const SeeLaterDialog = ({ bookmark, onClose }: SeeLaterDialogProps) => {
           <p className="mt-2xs line-clamp-3 text-step--1 text-theme10 [overflow-wrap:anywhere]">
             {current?.title ?? current?.url}
           </p>
-          <div className="grid grid-cols-3 gap-2xs [&_svg]:shrink-0">
-            <Button
-              variant="outline"
+          {/* Three tiles, as the journal and media pickers */}
+          <div className="grid grid-cols-3 gap-2xs">
+            <button
+              type="button"
+              className={TILE}
               disabled={isPending}
               onClick={() =>
                 update(
@@ -173,10 +201,11 @@ export const SeeLaterDialog = ({ bookmark, onClose }: SeeLaterDialogProps) => {
                 )
               }
             >
-              <TrashIcon size={18} weight="duotone" /> Trash
-            </Button>
-            <Button
-              variant="outline"
+              <TrashIcon size={20} weight="duotone" /> Trash
+            </button>
+            <button
+              type="button"
+              className={TILE}
               disabled={isPending}
               aria-pressed={current?.star}
               onClick={() =>
@@ -187,11 +216,12 @@ export const SeeLaterDialog = ({ bookmark, onClose }: SeeLaterDialogProps) => {
                 )
               }
             >
-              <StarIcon size={18} weight={current?.star ? 'fill' : 'duotone'} />
+              <StarIcon size={20} weight={current?.star ? 'fill' : 'duotone'} />
               {current?.star ? 'Unstar' : 'Star'}
-            </Button>
-            <Button
-              variant="outline"
+            </button>
+            <button
+              type="button"
+              className={TILE}
               disabled={isPending}
               aria-pressed={current?.public}
               onClick={() =>
@@ -203,42 +233,57 @@ export const SeeLaterDialog = ({ bookmark, onClose }: SeeLaterDialogProps) => {
               }
             >
               <EyeIcon
-                size={18}
+                size={20}
                 weight={current?.public ? 'fill' : 'duotone'}
               />
               {current?.public ? 'Private' : 'Public'}
-            </Button>
+            </button>
           </div>
+          {/* The last step, in violet: a tag files the bookmark away */}
           <form
-            className="flex items-center gap-2xs"
+            className="flex flex-col gap-2xs rounded-lg bg-accent3 p-xs"
             onSubmit={(event) => {
               event.preventDefault()
               tagBookmark()
             }}
           >
-            <Input
-              className="min-w-0 flex-1"
-              aria-label="Tag"
-              list={tagListId}
-              onChange={(event) => setTag(event.target.value)}
-              placeholder="Tag (collection:tag)"
-              value={tag}
-            />
-            <datalist id={tagListId}>
-              {tags?.map(({ tag: suggestion }) =>
-                suggestion ? (
-                  <option key={suggestion} value={suggestion} />
-                ) : null,
-              )}
-            </datalist>
-            <Button
-              type="submit"
-              disabled={isPending || !trimmedTag}
-              aria-label="Add tag"
-              title="Add tag"
+            <label
+              htmlFor={tagInputId}
+              className="flex items-center gap-2xs text-step--1 text-accent11"
             >
-              <PlusIcon size={18} weight="bold" />
-            </Button>
+              <TagIcon size={16} weight="duotone" /> Tag it to file it away
+            </label>
+            <div className="flex items-center gap-2xs">
+              <div className="min-w-0 flex-1">
+                <Combobox
+                  inputId={tagInputId}
+                  isMulti={false}
+                  options={tagOptions}
+                  value={
+                    trimmedTag ? { label: trimmedTag, value: trimmedTag } : null
+                  }
+                  onChange={(option) =>
+                    setTag((option as { value: string } | null)?.value ?? '')
+                  }
+                  components={{
+                    DropdownIndicator: null,
+                    IndicatorSeparator: null,
+                  }}
+                  // @ts-ignore The shared styles are typed for a multi field
+                  styles={TAG_FIELD_STYLES}
+                  maxMenuHeight={160}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isPending || !trimmedTag}
+                aria-label="Add tag"
+                title="Add tag"
+                className="grid size-9 shrink-0 place-items-center rounded-md bg-accent9 text-white hover:bg-accent10 disabled:opacity-50"
+              >
+                <PlusIcon size={18} weight="bold" />
+              </button>
+            </div>
           </form>
         </Flex>
       </DialogContent>
