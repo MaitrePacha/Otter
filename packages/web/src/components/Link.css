@@ -119,6 +119,22 @@
   color: var(--theme11);
 }
 
+.journal-card-title {
+  /* A journal card's name, as a bookmark's title (.link-feed-title):
+     underlined when the name itself is hovered */
+  font-size: var(--step-0);
+  font-variation-settings:
+    "wght" 500,
+    "wdth" 105;
+  color: var(--theme11);
+  text-decoration-color: var(--theme9);
+  text-underline-offset: 3px;
+
+  &:hover {
+    text-decoration-line: underline;
+  }
+}
+
 .link-fab {
   --color: var(--theme12);
   border-radius: var(--radii-l);
