@@ -88,7 +88,7 @@ export const CollectionFilters = ({
                   className={cn(
                     'focus text-step--2',
                     isActive
-                      ? 'font-medium text-theme12'
+                      ? 'text-accent11'
                       : 'text-theme9 hover:text-theme12',
                   )}
                   onClick={() =>
