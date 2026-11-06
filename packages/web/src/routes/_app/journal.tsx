@@ -1,5 +1,4 @@
 import {
-  CheckIcon,
   CheckSquareIcon,
   ChecksIcon,
   CircleIcon,
@@ -194,21 +193,21 @@ function RouteComponent() {
                 checked={journalFilter === journalItem.id}
               >
                 <NotebookIcon size={18} weight="duotone" />
-                {/* On the selected journal, the check turns into a pencil
-                    on hover to edit the journal */}
+                {/* On the selected journal, the check turns into a trash
+                    on hover to delete the journal, after a confirmation */}
                 {journalFilter === journalItem.id ? (
                   <button
                     type="button"
-                    className="journal-tile-edit focus"
-                    aria-label={`Edit ${journalItem.name}`}
-                    title="Edit journal"
+                    className="journal-tile-delete focus"
+                    aria-label={`Delete ${journalItem.name}`}
+                    title="Delete journal"
+                    disabled={deleteJournalMutation.isPending}
                     onClick={(event) => {
                       event.preventDefault()
-                      setEditingJournal(journalItem)
+                      handleDeleteJournal()
                     }}
                   >
-                    <CheckIcon className="journal-tile-edit-check" />
-                    <PencilSimpleIcon className="journal-tile-edit-pencil" />
+                    <TrashIcon weight="bold" />
                   </button>
                 ) : null}
               </IconControl>
@@ -222,10 +221,9 @@ function RouteComponent() {
             <Button
               size="xs"
               variant="ghost"
-              disabled={deleteJournalMutation.isPending}
-              onClick={handleDeleteJournal}
+              onClick={() => setEditingJournal(activeJournal)}
             >
-              <TrashIcon size={16} weight="duotone" /> Delete journal
+              <PencilSimpleIcon size={16} weight="duotone" /> Edit journal
             </Button>
           ) : null}
           <Dialog
