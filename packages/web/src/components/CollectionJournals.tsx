@@ -5,7 +5,9 @@ import type { Journal } from '@/types/db'
 import {
   getJournalEntriesOptions,
   getJournalsOptions,
+  useUpdateJournal,
 } from '@/utils/fetching/journal'
+import { IconButton } from './IconButton'
 import { Link } from './Link'
 
 // A tag is under `parent` when it is `parent` or starts with `parent:`
@@ -37,6 +39,7 @@ export const CollectionJournals = ({
   starredOnly = false,
 }: CollectionJournalsProps) => {
   const { data } = useSuspenseQuery(getJournalsOptions())
+  const updateJournal = useUpdateJournal()
   // The toolbar's Stars, in the same search param as the bookmarks'
   const { starQuery } = useFeedOptions()
   const onlyStars = starredOnly || starQuery
@@ -94,17 +97,27 @@ export const CollectionJournals = ({
                 {journal.description}
               </span>
             ) : null}
-            {/* The star of a starred journal leads its tags, as on a
-                bookmark's footer */}
+            {/* The star leads the tags and toggles, as on a bookmark */}
             <span className="flex flex-wrap items-center gap-3xs">
-              {journal.star ? (
+              <IconButton
+                size="s"
+                aria-label={journal.star ? 'Unstar' : 'Star'}
+                disabled={updateJournal.isPending}
+                onClick={(event) => {
+                  // The card is a link to the journal: only toggle the star
+                  event.preventDefault()
+                  event.stopPropagation()
+                  updateJournal.mutate({
+                    data: { star: !journal.star },
+                    id: journal.id,
+                  })
+                }}
+              >
                 <StarIcon
-                  size={14}
-                  weight="fill"
-                  aria-label="Starred"
-                  className="text-theme10"
+                  size={16}
+                  weight={journal.star ? 'fill' : 'duotone'}
                 />
-              ) : null}
+              </IconButton>
               {journal.tags.map((tag) => (
                 <span
                   key={tag}
