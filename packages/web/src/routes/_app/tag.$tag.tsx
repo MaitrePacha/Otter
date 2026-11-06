@@ -49,7 +49,7 @@ function Page() {
           <HashIcon weight="duotone" size={24} />
           {tag}
         </h3>
-        <JournalsToolbar kind="tag" name={tag} defaultTags={[tag]} />
+        <JournalsToolbar kind="tag" name={tag} />
         <div className="mt-xs">
           <ViewSwitch view={view} />
         </div>
