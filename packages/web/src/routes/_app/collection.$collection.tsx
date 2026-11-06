@@ -1,4 +1,4 @@
-import { FolderIcon } from '@phosphor-icons/react'
+import { HashIcon } from '@phosphor-icons/react'
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query'
 import { createFileRoute, useSearch } from '@tanstack/react-router'
 import { CollectionFilters } from '@/components/CollectionFilters'
@@ -77,7 +77,7 @@ function Page() {
             'flex items-center gap-2xs',
           )}
         >
-          <FolderIcon weight="duotone" size={24} />
+          <HashIcon weight="duotone" size={24} />
           {collection}
         </h3>
         <JournalsToolbar
@@ -133,7 +133,7 @@ function CollectionBookmarks({
       limit={search.limit}
       allowGroupByDate={true}
       title={collection}
-      icon={<FolderIcon weight="duotone" size={24} />}
+      icon={<HashIcon weight="duotone" size={24} />}
       feedType="bookmarks"
       filters={filters}
       from={`/collection/${encodeURIComponent(collection)}`}
