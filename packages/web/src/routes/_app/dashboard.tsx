@@ -1,6 +1,8 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
+import { DashboardJournals } from '@/components/DashboardJournals'
 import { FeedSimple } from '@/components/FeedSimple'
+import { ViewSwitch } from '@/components/ViewSwitch'
 import { CONTENT, createTitle } from '@/constants'
 import type { Bookmark, Toot } from '@/types/db'
 import { getBookmarksOptions } from '@/utils/fetching/bookmarks'
@@ -48,9 +50,25 @@ export const Route = createFileRoute('/_app/dashboard')({
     const response = { dashboard, followUpBookmarks, seeLaterBookmarks, toots }
     return response
   },
+  // The bookmarks' sections, or the same sections for journal entries
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { view?: 'journals' } =>
+    search.view === 'journals' ? { view: 'journals' } : {},
 })
 
 function Index() {
+  const { view } = Route.useSearch()
+
+  return (
+    <div className="flex flex-col gap-l">
+      <ViewSwitch view={view} />
+      {view === 'journals' ? <DashboardJournals /> : <DashboardBookmarks />}
+    </div>
+  )
+}
+
+function DashboardBookmarks() {
   const { data: dashboard } = useSuspenseQuery(getDashboardOptions())
   const { data: seeLaterBookmarks } = useSuspenseQuery(
     getBookmarksOptions(SEE_LATER_PARAMS),

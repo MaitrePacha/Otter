@@ -19,6 +19,7 @@ const journalToRow = (item: JournalRow): Journal => ({
   id: item.id,
   name: item.name,
   owner: item.owner,
+  star: item.star,
   status: item.status,
   tags: item.tags ?? [],
 })
@@ -100,6 +101,7 @@ const toJournalSet = (body: Record<string, unknown>) => {
   if ('description' in body)
     values.description = body.description as string | null
   if ('name' in body) values.name = body.name as string
+  if ('star' in body) values.star = Boolean(body.star)
   if ('status' in body) values.status = body.status as typeof values.status
   // Same tags as bookmarks: trimmed, without blanks or duplicates
   if ('tags' in body)
