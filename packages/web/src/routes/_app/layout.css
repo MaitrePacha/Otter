@@ -172,8 +172,10 @@
       color: var(--accent11);
       background-color: var(--accent6);
 
+      /* As an active sidebar link: the text takes the plain hover grey */
       &:hover {
-        color: var(--accent12);
+        color: var(--theme11);
+        background-color: var(--accent7);
       }
     }
   }
