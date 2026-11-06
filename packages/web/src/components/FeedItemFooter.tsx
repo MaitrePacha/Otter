@@ -91,6 +91,8 @@ export const FeedItemFooter = (props: FeedItemFooterProps) => {
           : { see_later: !seeLater }
     await updateBookmark(id, updateData)
     await queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
+    // A collection's page has its own query
+    await queryClient.invalidateQueries({ queryKey: ['collections'] })
     if (column === 'see_later') {
       // The See later count in the sidebar
       await queryClient.invalidateQueries({ queryKey: ['meta'] })
