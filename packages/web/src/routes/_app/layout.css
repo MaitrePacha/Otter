@@ -161,6 +161,13 @@
     font-weight: 500;
     letter-spacing: normal;
 
+    /* With line-height 1, the font's letters sit a little above the centre
+       of the button while the icons sit on it: lift the icons to the
+       letters, by a fraction of a pixel */
+    svg {
+      translate: 0 -0.5px;
+    }
+
     &:hover {
       border: 0;
       color: var(--theme11);
