@@ -13,7 +13,8 @@ const toggle = (list: string[], item: string) =>
   list.includes(item) ? list.filter((value) => value !== item) : [...list, item]
 
 /**
- * Two rows of filters on a collection's page: its folders as small grey chips, then the sub-folders of the selected folders as plain text. Both live in the page's search
+ * Two rows of filters on a collection's page: its folders as small chips in
+ * the sidebar's colours, then the sub-folders of the selected folders as plain text. Both live in the page's search
  * params, so a filtered view can be bookmarked.
  */
 export const CollectionFilters = ({
@@ -48,12 +49,12 @@ export const CollectionFilters = ({
               key={folder.tag}
               type="button"
               aria-pressed={isSelected}
-              // Greys only: the violet is kept for Bookmarks / Journals
+              // The sidebar's state colours
               className={cn(
                 'focus rounded-md px-2xs py-3xs text-step--2',
                 isSelected
-                  ? 'bg-theme5 text-theme12'
-                  : 'text-theme9 hover:text-theme12',
+                  ? 'bg-accent6 font-medium text-accent11 hover:bg-accent7 hover:text-theme11'
+                  : 'text-theme10 hover:bg-theme5 hover:text-theme11',
               )}
               onClick={() =>
                 navigate({
