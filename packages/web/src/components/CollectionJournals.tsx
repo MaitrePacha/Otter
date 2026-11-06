@@ -1,4 +1,6 @@
+import { StarIcon } from '@phosphor-icons/react'
 import { useSuspenseQuery } from '@tanstack/react-query'
+import { useFeedOptions } from '@/hooks/useFeedOptions'
 import type { Journal } from '@/types/db'
 import {
   getJournalEntriesOptions,
@@ -14,12 +16,14 @@ const isUnder = (tag: string, parent: string) => {
 }
 
 interface CollectionJournalsProps {
-  /** The collection, or the tag on a tag's page */
-  collection: string
+  /** The collection, or the tag on a tag's page; none lists every journal */
+  collection?: string
   /** The selected folders or sub-folders; none shows the whole collection */
-  filterTags: string[]
+  filterTags?: string[]
   /** On a tag's page: only journals with that very tag, as for bookmarks */
   exact?: boolean
+  /** Only the starred journals, as the toolbar's Stars or the Stars page */
+  starredOnly?: boolean
 }
 
 /**
@@ -28,19 +32,30 @@ interface CollectionJournalsProps {
  */
 export const CollectionJournals = ({
   collection,
-  filterTags,
+  filterTags = [],
   exact = false,
+  starredOnly = false,
 }: CollectionJournalsProps) => {
   const { data } = useSuspenseQuery(getJournalsOptions())
-  const parents = filterTags.length ? filterTags : [collection]
-  const journals = (data?.data ?? []).filter((journal: Journal) =>
-    journal.tags.some((tag) =>
-      parents.some((parent) =>
-        exact
-          ? tag.toLowerCase() === parent.toLowerCase()
-          : isUnder(tag, parent),
-      ),
-    ),
+  // The toolbar's Stars, in the same search param as the bookmarks'
+  const { starQuery } = useFeedOptions()
+  const onlyStars = starredOnly || starQuery
+  const parents = filterTags.length
+    ? filterTags
+    : collection
+      ? [collection]
+      : []
+  const journals = (data?.data ?? []).filter(
+    (journal: Journal) =>
+      (!onlyStars || journal.star) &&
+      (!parents.length ||
+        journal.tags.some((tag) =>
+          parents.some((parent) =>
+            exact
+              ? tag.toLowerCase() === parent.toLowerCase()
+              : isUnder(tag, parent),
+          ),
+        )),
   )
 
   const { data: entries } = useSuspenseQuery(getJournalEntriesOptions())
@@ -79,7 +94,17 @@ export const CollectionJournals = ({
                 {journal.description}
               </span>
             ) : null}
-            <span className="flex flex-wrap gap-3xs">
+            {/* The star of a starred journal leads its tags, as on a
+                bookmark's footer */}
+            <span className="flex flex-wrap items-center gap-3xs">
+              {journal.star ? (
+                <StarIcon
+                  size={14}
+                  weight="fill"
+                  aria-label="Starred"
+                  className="text-theme10"
+                />
+              ) : null}
               {journal.tags.map((tag) => (
                 <span
                   key={tag}

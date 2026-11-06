@@ -472,6 +472,7 @@ export const journals = pgTable(
       }),
     name: text('name').notNull(),
     owner: uuid('owner').references(() => authUsers.id),
+    star: boolean('star').notNull().default(false),
     status: journalStatusEnum('status').notNull().default('active'),
     tags: text('tags').array(),
   },

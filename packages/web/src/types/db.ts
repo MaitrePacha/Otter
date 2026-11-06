@@ -226,14 +226,16 @@ export interface Journal {
   id: number
   name: string
   owner: string | null
+  star: boolean
   status: JournalStatus
   tags: string[]
 }
 
 export type JournalInsert = Omit<
   Journal,
-  'created_at' | 'id' | 'owner' | 'status'
+  'created_at' | 'id' | 'owner' | 'star' | 'status'
 > & {
+  star?: boolean
   id?: number
   status?: JournalStatus
 }
