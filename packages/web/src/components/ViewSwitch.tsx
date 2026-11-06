@@ -30,10 +30,10 @@ export const ViewSwitch = ({ view }: { view: 'journals' | undefined }) => {
           title={label}
           className={cn(
             'focus grid size-8 place-items-center rounded-md',
-            // The sidebar's state colours
+            // Greys only: the violet is kept for the folders
             view === value
-              ? 'bg-accent6 text-accent11 hover:bg-accent7 hover:text-theme11'
-              : 'text-theme10 hover:bg-theme5 hover:text-theme11',
+              ? 'bg-theme5 text-theme12'
+              : 'text-theme9 hover:text-theme12',
           )}
           onClick={() =>
             navigate({
