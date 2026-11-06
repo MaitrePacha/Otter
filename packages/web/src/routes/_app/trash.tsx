@@ -51,23 +51,45 @@ export const Route = createFileRoute('/_app/trash')({
   },
 })
 
-// Switches between the two views, under the title
-const trashViews = (view: 'journal' | undefined) => [
+const TRASH_VIEWS = [
   {
-    href: '/trash',
     icon: <BookmarkSimpleIcon weight="duotone" size={18} />,
-    isActive: view !== 'journal',
-    search: { view: undefined },
     text: 'Bookmarks',
+    view: undefined,
   },
   {
-    href: '/trash',
     icon: <CalendarBlankIcon weight="duotone" size={18} />,
-    isActive: view === 'journal',
-    search: { view: 'journal' },
     text: 'Journal entries',
+    view: 'journal',
   },
-]
+] as const
+
+/**
+ * Switches between the two views, under the title, in the greys of a
+ * collection's Bookmarks / Journals buttons
+ */
+const TrashViews = ({ view }: { view: 'journal' | undefined }) => (
+  <div className="flex flex-wrap gap-3xs">
+    {TRASH_VIEWS.map(({ icon, text, view: target }) => (
+      <Link
+        key={text}
+        href="/trash"
+        // @ts-expect-error How do I type search params?
+        search={{ view: target }}
+        aria-pressed={view === target}
+        className={cn(
+          'flex items-center gap-3xs rounded-md px-2xs py-3xs text-step--2 hover:no-underline!',
+          view === target
+            ? 'bg-theme5 [--color:var(--theme12)]!'
+            : '[--color:var(--theme9)]! hover:[--color:var(--theme12)]!',
+        )}
+      >
+        {icon}
+        {text}
+      </Link>
+    ))}
+  </div>
+)
 
 function FeedPage() {
   const { view, ...search } = useSearch({ from: '/_app/trash' })
@@ -100,7 +122,7 @@ function BookmarksTrash({
       allowGroupByDate={true}
       title={CONTENT.trashTitle}
       icon={<TrashIcon weight="duotone" size={24} />}
-      subNav={trashViews(undefined)}
+      filters={<TrashViews view={undefined} />}
       feedType="bookmarks"
       allowDeletion
       from="/trash"
@@ -260,23 +282,8 @@ function JournalTrash() {
           </Button>
         </PageToolbar>
       ) : null}
-      <div className="mt-xs flex flex-wrap gap-3xs">
-        {trashViews('journal').map(({ href, icon, isActive, search, text }) => (
-          <Link
-            href={href}
-            // @ts-expect-error How do I type search params?
-            search={search}
-            variant="sidebar"
-            isActive={isActive}
-            aria-pressed={isActive}
-            key={text}
-          >
-            <div className="link-sidebar-inner">
-              {icon}
-              {text}
-            </div>
-          </Link>
-        ))}
+      <div className="mt-xs">
+        <TrashViews view="journal" />
       </div>
       <div className="mt-m max-w-prose">
         {entries.length ? (
