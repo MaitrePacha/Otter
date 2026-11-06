@@ -226,6 +226,11 @@ export const BookmarkForm = ({
           console.error(error)
         },
         onSuccess: (data) => {
+          // The page could not be read (refused, turned away…): keep the
+          // form as it is, without guessing tags from nothing
+          if ('error' in data && data.error) {
+            return
+          }
           lastScrapedUrl.current = normalizeUrl(data.url ?? url)
           setFieldValue('title', data.title)
           setFieldValue('description', data.description)

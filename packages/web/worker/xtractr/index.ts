@@ -7,6 +7,7 @@ import { createMarkdownContent } from './defuddle/markdown'
 import { MAX_SIZE, readResponseWithLimit } from './fetch'
 import { followShortUrl } from './follow-short-url'
 import { detectPageType } from './page-type'
+import { isRedirectToOtherHomePage } from './redirect-home'
 import type { DefuddleCompatDocument, XtractResponse } from './xtract-response'
 
 export async function xtract(targetUrl: string): Promise<XtractResponse> {
@@ -20,6 +21,13 @@ export async function xtract(targetUrl: string): Promise<XtractResponse> {
       'User-Agent': 'Mozilla/5.0 (compatible; OtterBot/1.0)',
     },
   })
+
+  // A link to a page that lands on another site's home page was turned
+  // away (an Instagram post ends on facebook.com): fail rather than read
+  // that home page, so the form keeps the shared address
+  if (isRedirectToOtherHomePage(targetUrl, response.url || resolvedShortUrl)) {
+    throw new Error(`${targetUrl} redirects to another site's home page`)
+  }
 
   if (!response.ok) {
     throw new Error(
@@ -60,6 +68,7 @@ export async function xtract(targetUrl: string): Promise<XtractResponse> {
   }
 
   const finalUrl = response.url || resolvedShortUrl
+
   // Read before Defuddle runs, as it rewrites the document.
   const fallbackImage = findImage(document, finalUrl)
   const defuddle = new Defuddle(document, {
