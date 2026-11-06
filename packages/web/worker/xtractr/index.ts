@@ -8,9 +8,17 @@ import { MAX_SIZE, readResponseWithLimit } from './fetch'
 import { followShortUrl } from './follow-short-url'
 import { detectPageType } from './page-type'
 import type { DefuddleCompatDocument, XtractResponse } from './xtract-response'
+import { isYouTube, readYouTube } from './youtube'
 
 export async function xtract(targetUrl: string): Promise<XtractResponse> {
   console.log(`🚀 ~ xtract ~ targetUrl:`, targetUrl)
+  if (isYouTube(targetUrl)) {
+    const video = await readYouTube(targetUrl)
+    if (video) {
+      return video
+    }
+  }
+
   const { unshortened_url, urls } = await followShortUrl([targetUrl])
   const resolvedShortUrl = unshortened_url || targetUrl
 
