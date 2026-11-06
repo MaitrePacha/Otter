@@ -10,7 +10,7 @@ import {
   TrashIcon,
 } from '@phosphor-icons/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import type { BatchAction } from 'worker/bookmarks/batch'
 import { Button } from '@/components/Button'
@@ -18,9 +18,31 @@ import type { Bookmark, BookmarkType } from '@/types/db'
 import { batchUpdateBookmarks } from '@/utils/fetching/bookmarks'
 import { getTagsOptions } from '@/utils/fetching/tags'
 import { getErrorMessage } from '@/utils/get-error-message'
-import { Flex } from './Flex'
-import { Input } from './Input'
+import { Combobox, comboboxStyles } from './Combobox'
 import { Popover, PopoverContent, PopoverTrigger } from './Popover'
+import { TypeToIcon } from './TypeToIcon'
+
+// The bookmark form's tag field, drawn as the window's plain grey field
+const TAG_FIELD_STYLES: Record<string, unknown> = {
+  ...comboboxStyles,
+  // @ts-ignore
+  control: (provided, state) => ({
+    ...provided,
+    ':hover': {
+      borderColor: state.isFocused ? 'var(--theme8)' : 'var(--theme5)',
+    },
+    backgroundColor: 'var(--theme2)',
+    borderColor: state.isFocused ? 'var(--theme8)' : 'var(--theme5)',
+    borderRadius: 'var(--radii-m)',
+    boxShadow: 'none',
+    minHeight: 0,
+  }),
+}
+
+const ICON_BUTTON =
+  'focus grid size-7 shrink-0 place-items-center rounded-md text-theme10 hover:bg-theme4 hover:text-theme12 disabled:opacity-50'
+const TEXT_BUTTON =
+  'focus text-step--2 text-theme9 hover:text-theme12 disabled:opacity-50'
 
 const BOOKMARK_TYPES: BookmarkType[] = [
   'link',
@@ -55,7 +77,6 @@ export const BulkActionBar = ({
 }: BulkActionBarProps) => {
   const queryClient = useQueryClient()
   const selectedIds = selectedBookmarks.map((bookmark) => bookmark.id)
-  const tagListId = useId()
   const [tag, setTag] = useState('')
   const { data: tags } = useQuery(getTagsOptions())
   const { isPending, mutate } = useMutation({
@@ -75,6 +96,9 @@ export const BulkActionBar = ({
   })
   const isDisabled = isPending || selectedIds.length === 0
   const trimmedTag = tag.trim()
+  const tagOptions = tags
+    ?.filter((item) => item.tag && item.tag !== 'Untagged')
+    .map((item) => ({ label: item.tag, value: item.tag }))
   const isAllSelected = totalCount > 0 && selectedIds.length === totalCount
 
   // Each toggle offers whatever the selection is not entirely already
@@ -198,92 +222,99 @@ export const BulkActionBar = ({
                 <PencilSimpleIcon size={16} weight="duotone" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto" collisionPadding={16}>
-              <Flex gap="2xs" direction="column">
-                <Flex gap="3xs" align="center">
-                  <Input
-                    aria-label="Tag"
-                    list={tagListId}
-                    onChange={(event) => setTag(event.target.value)}
-                    placeholder="Tag (collection:tag)"
-                    value={tag}
-                  />
-                  <datalist id={tagListId}>
-                    {tags?.map(({ tag: suggestion }) =>
-                      suggestion ? (
-                        <option key={suggestion} value={suggestion} />
-                      ) : null,
-                    )}
-                  </datalist>
-                  {/* No gap between the add and remove buttons */}
-                  <Flex align="center">
-                    <Button
-                      size="2xs"
-                      variant="ghost"
-                      disabled={isDisabled || !trimmedTag}
-                      onClick={() =>
-                        mutate({ tag: trimmedTag, type: 'addTag' })
+            {/* Greys only: the tag field, the types as icons, then the
+                fields to clear, in three bands */}
+            <PopoverContent
+              className="w-72 border-theme5 bg-theme2 p-0"
+              collisionPadding={16}
+            >
+              <div className="flex flex-col">
+                <div className="flex items-center gap-3xs p-2xs">
+                  {/* The bookmark form's tag suggestions, in a field that
+                      looks like a plain one: no arrow, one tag at a time */}
+                  <div className="min-w-0 flex-1">
+                    <Combobox
+                      inputId="bulk-tag"
+                      aria-label="Tag"
+                      isMulti={false}
+                      options={tagOptions}
+                      placeholder="Tag"
+                      value={
+                        trimmedTag
+                          ? { label: trimmedTag, value: trimmedTag }
+                          : null
                       }
-                      aria-label="Add tag"
-                      title="Add tag"
-                    >
-                      <PlusCircleIcon size={16} weight="duotone" />
-                    </Button>
-                    <Button
-                      size="2xs"
-                      variant="ghost"
-                      disabled={isDisabled || !trimmedTag}
-                      onClick={() =>
-                        mutate({ tag: trimmedTag, type: 'removeTag' })
+                      onChange={(option) =>
+                        setTag(
+                          (option as { value: string } | null)?.value ?? '',
+                        )
                       }
-                      aria-label="Remove tag"
-                      title="Remove tag"
+                      components={{
+                        DropdownIndicator: null,
+                        IndicatorSeparator: null,
+                      }}
+                      // @ts-ignore The shared styles are typed for a multi field
+                      styles={TAG_FIELD_STYLES}
+                      maxMenuHeight={160}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className={ICON_BUTTON}
+                    disabled={isDisabled || !trimmedTag}
+                    onClick={() => mutate({ tag: trimmedTag, type: 'addTag' })}
+                    aria-label="Add tag"
+                    title="Add tag"
+                  >
+                    <PlusCircleIcon size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className={ICON_BUTTON}
+                    disabled={isDisabled || !trimmedTag}
+                    onClick={() =>
+                      mutate({ tag: trimmedTag, type: 'removeTag' })
+                    }
+                    aria-label="Remove tag"
+                    title="Remove tag"
+                  >
+                    <MinusCircleIcon size={16} />
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-4xs border-theme4 border-t p-2xs">
+                  {BOOKMARK_TYPES.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      className={ICON_BUTTON}
+                      disabled={isDisabled}
+                      onClick={() => mutate({ type: 'setType', value: type })}
+                      aria-label={`Set type: ${type}`}
+                      title={`Set type: ${type}`}
                     >
-                      <MinusCircleIcon size={16} weight="duotone" />
-                    </Button>
-                  </Flex>
-                </Flex>
-                <Flex gap="3xs">
-                  <select
-                    aria-label="Set type"
-                    className="input-base focus w-auto text-step--2"
+                      <TypeToIcon type={type} size="16" />
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-s border-theme4 border-t p-2xs">
+                  <button
+                    type="button"
+                    className={TEXT_BUTTON}
                     disabled={isDisabled}
-                    onChange={(event) =>
-                      mutate({
-                        type: 'setType',
-                        value: event.target.value as BookmarkType,
-                      })
-                    }
-                    value=""
+                    onClick={() => handleRemove('description')}
                   >
-                    <option value="" disabled hidden>
-                      Set type…
-                    </option>
-                    {BOOKMARK_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    aria-label="Remove"
-                    className="input-base focus w-auto text-step--2"
+                    Clear description
+                  </button>
+                  <button
+                    type="button"
+                    className={TEXT_BUTTON}
                     disabled={isDisabled}
-                    onChange={(event) =>
-                      handleRemove(
-                        event.target.value as 'description' | 'image',
-                      )
-                    }
-                    value=""
+                    onClick={() => handleRemove('image')}
                   >
-                    <option value="" disabled hidden>
-                      Remove…
-                    </option>
-                    <option value="description">Description</option>
-                    <option value="image">Image</option>
-                  </select>
-                </Flex>
-              </Flex>
+                    Clear image
+                  </button>
+                </div>
+              </div>
             </PopoverContent>
           </Popover>
         </>
