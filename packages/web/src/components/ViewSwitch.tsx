@@ -1,3 +1,6 @@
+import popOffSfx from '@mrmartineau/kit/sounds/pop-off.mp3'
+import popOnSfx from '@mrmartineau/kit/sounds/pop-on.mp3'
+import useSound from '@mrmartineau/use-sound'
 import { BookmarksSimpleIcon, NotebookIcon } from '@phosphor-icons/react'
 import { useNavigate } from '@tanstack/react-router'
 import { cn } from '@/utils/classnames'
@@ -18,6 +21,9 @@ const VIEWS = [
 /** Two small icon buttons switching between the bookmarks and the journals */
 export const ViewSwitch = ({ view }: { view: 'journals' | undefined }) => {
   const navigate = useNavigate()
+  // Public and private's sounds: on into the journals, off back out
+  const [playPopOn] = useSound(popOnSfx, { volume: 0.3 })
+  const [playPopOff] = useSound(popOffSfx, { volume: 0.3 })
 
   return (
     <div className="flex gap-4xs">
@@ -35,7 +41,14 @@ export const ViewSwitch = ({ view }: { view: 'journals' | undefined }) => {
               ? 'bg-theme5 text-theme12'
               : 'text-theme9 hover:text-theme12',
           )}
-          onClick={() =>
+          onClick={() => {
+            if (view !== value) {
+              if (value === 'journals') {
+                playPopOn()
+              } else {
+                playPopOff()
+              }
+            }
             navigate({
               resetScroll: false,
               search: (prev: Record<string, unknown>) => ({
@@ -44,7 +57,7 @@ export const ViewSwitch = ({ view }: { view: 'journals' | undefined }) => {
               }),
               to: '.',
             })
-          }
+          }}
         >
           {icon}
         </button>
