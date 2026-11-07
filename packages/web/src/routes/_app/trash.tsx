@@ -278,7 +278,7 @@ function JournalTrash() {
           </Link>
         ))}
       </div>
-      <div className="mt-m max-w-prose">
+      <div className="mt-m grid gap-m md:grid-cols-2">
         {entries.length ? (
           entries.map((entry) => (
             <JournalEntryItem

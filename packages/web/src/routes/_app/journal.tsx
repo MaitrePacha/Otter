@@ -368,7 +368,7 @@ function RouteComponent() {
         ) : null}
       </div>
 
-      <div className="max-w-prose">
+      <div className="grid gap-m md:grid-cols-2">
         {entries.length ? (
           entries.map((entry) => (
             <JournalEntryItem
