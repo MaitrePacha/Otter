@@ -82,12 +82,10 @@ export const CollectionJournals = ({
             href="/journal"
             // @ts-expect-error How do I type search params?
             search={{ journal: journal.id }}
-            className="group card w-full justify-start hover:no-underline!"
+            className="card w-full justify-start hover:no-underline!"
           >
             <span className="flex items-baseline justify-between gap-xs">
-              <span className="text-step-0 text-theme12 decoration-theme9 underline-offset-3 group-hover:underline">
-                {journal.name}
-              </span>
+              <span className="journal-card-title">{journal.name}</span>
               <span className="text-step--2 text-theme9">
                 {entryCounts.get(journal.id) ?? 0}
               </span>
