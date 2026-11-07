@@ -63,6 +63,18 @@ export interface ComboOption {
   value: string
 }
 
+// A title to complete for a page that could not be read, naming the site
+// it comes from, as Instagram Media
+const unreadTitle = (url: string) => {
+  try {
+    const labels = new URL(url).hostname.split('.')
+    const name = labels.length > 1 ? labels[labels.length - 2] : labels[0]
+    return name ? `${name.charAt(0).toUpperCase()}${name.slice(1)} Media` : ''
+  } catch {
+    return ''
+  }
+}
+
 export const setComboboxValue = (
   tags?: string[] | null,
 ): readonly ComboOption[] => {
@@ -226,6 +238,15 @@ export const BookmarkForm = ({
           console.error(error)
         },
         onSuccess: (data) => {
+          // The page could not be read (it needs an account…): keep the
+          // form as it is, with the site and the page as a title to complete,
+          // and no tags guessed from nothing
+          if ('error' in data && data.error) {
+            if (!form.getFieldValue('title')) {
+              setFieldValue('title', unreadTitle(url))
+            }
+            return
+          }
           lastScrapedUrl.current = normalizeUrl(data.url ?? url)
           setFieldValue('title', data.title)
           setFieldValue('description', data.description)
