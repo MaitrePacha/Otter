@@ -1,3 +1,8 @@
+import popOffSfx from '@mrmartineau/kit/sounds/pop-off.mp3'
+import popOnSfx from '@mrmartineau/kit/sounds/pop-on.mp3'
+import popUpOffSfx from '@mrmartineau/kit/sounds/pop-up-off.mp3'
+import popUpOnSfx from '@mrmartineau/kit/sounds/pop-up-on.mp3'
+import useSound from '@mrmartineau/use-sound'
 import {
   ArrowCounterClockwiseIcon,
   ChecksIcon,
@@ -13,6 +18,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import type { BatchAction } from 'worker/bookmarks/batch'
+import sweepSfx from '@/assets/sounds/sweep.mp3'
 import { Button } from '@/components/Button'
 import type { Bookmark, BookmarkType } from '@/types/db'
 import { batchUpdateBookmarks } from '@/utils/fetching/bookmarks'
@@ -76,6 +82,13 @@ export const BulkActionBar = ({
   onClear,
 }: BulkActionBarProps) => {
   const queryClient = useQueryClient()
+  // The single bookmark's star and public sounds, played three times in
+  // quick succession to mark a bulk edit; a broom sweep for the trash
+  const [playPopOn] = useSound(popOnSfx, { volume: 0.3 })
+  const [playPopOff] = useSound(popOffSfx, { volume: 0.3 })
+  const [playPopUpOn] = useSound(popUpOnSfx, { volume: 0.3 })
+  const [playPopUpOff] = useSound(popUpOffSfx, { volume: 0.3 })
+  const [playSweep] = useSound(sweepSfx, { volume: 0.3 })
   const selectedIds = selectedBookmarks.map((bookmark) => bookmark.id)
   const [tag, setTag] = useState('')
   const { data: tags } = useQuery(getTagsOptions())
@@ -94,6 +107,11 @@ export const BulkActionBar = ({
       await queryClient.invalidateQueries()
     },
   })
+  const playRepeated = (play: () => void) => {
+    play()
+    setTimeout(play, 90)
+    setTimeout(play, 180)
+  }
   const isDisabled = isPending || selectedIds.length === 0
   const trimmedTag = tag.trim()
   const tagOptions = tags
@@ -180,7 +198,10 @@ export const BulkActionBar = ({
             size="xs"
             variant="ghost"
             disabled={isDisabled}
-            onClick={() => mutate({ type: 'star', value: !isAllStarred })}
+            onClick={() => {
+              playRepeated(isAllStarred ? playPopUpOff : playPopUpOn)
+              mutate({ type: 'star', value: !isAllStarred })
+            }}
             aria-label={isAllStarred ? 'Unstar' : 'Star'}
             title={isAllStarred ? 'Unstar' : 'Star'}
           >
@@ -190,7 +211,10 @@ export const BulkActionBar = ({
             size="xs"
             variant="ghost"
             disabled={isDisabled}
-            onClick={() => mutate({ type: 'public', value: !isAllPublic })}
+            onClick={() => {
+              playRepeated(isAllPublic ? playPopOff : playPopOn)
+              mutate({ type: 'public', value: !isAllPublic })
+            }}
             aria-label={isAllPublic ? 'Make private' : 'Make public'}
             title={isAllPublic ? 'Make private' : 'Make public'}
           >
@@ -204,7 +228,10 @@ export const BulkActionBar = ({
             size="xs"
             variant="ghost"
             disabled={isDisabled}
-            onClick={() => mutate({ type: 'trash' })}
+            onClick={() => {
+              playSweep()
+              mutate({ type: 'trash' })
+            }}
             aria-label="Trash"
             title="Trash"
           >
