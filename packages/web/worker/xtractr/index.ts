@@ -7,10 +7,29 @@ import { createMarkdownContent } from './defuddle/markdown'
 import { MAX_SIZE, readResponseWithLimit } from './fetch'
 import { followShortUrl } from './follow-short-url'
 import { detectPageType } from './page-type'
+import { isTurnedAway } from './turned-away'
 import type { DefuddleCompatDocument, XtractResponse } from './xtract-response'
+import { isYouTube, readYouTube } from './youtube'
 
 export async function xtract(targetUrl: string): Promise<XtractResponse> {
   console.log(`🚀 ~ xtract ~ targetUrl:`, targetUrl)
+  if (isYouTube(targetUrl)) {
+    const video = await readYouTube(targetUrl)
+    if (video) {
+      // The description is only on the page, which YouTube may refuse
+      const page = await readPage(targetUrl).catch(() => null)
+      return {
+        ...video,
+        content: page?.content || video.content,
+        description: page?.description || video.description,
+      }
+    }
+  }
+
+  return readPage(targetUrl)
+}
+
+async function readPage(targetUrl: string): Promise<XtractResponse> {
   const { unshortened_url, urls } = await followShortUrl([targetUrl])
   const resolvedShortUrl = unshortened_url || targetUrl
 
@@ -20,6 +39,12 @@ export async function xtract(targetUrl: string): Promise<XtractResponse> {
       'User-Agent': 'Mozilla/5.0 (compatible; OtterBot/1.0)',
     },
   })
+
+  // A link to a page sent to a sign-in page or a home page: fail rather
+  // than read that page, so the form keeps the shared address
+  if (isTurnedAway(targetUrl, [...urls, response.url || resolvedShortUrl])) {
+    throw new Error(`${targetUrl} needs an account to be read`)
+  }
 
   if (!response.ok) {
     throw new Error(
